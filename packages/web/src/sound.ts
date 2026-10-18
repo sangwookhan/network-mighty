@@ -120,7 +120,7 @@ export function say(text: string) {
   u.lang = 'ko-KR';
   const ko = speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith('ko'));
   if (ko) u.voice = ko;
-  u.rate = 1.15;
+  u.rate = 1;
   u.pitch = 1.1;
   u.volume = 0.9;
   speechSynthesis.cancel(); // 앞의 말이 밀리지 않게

@@ -3,8 +3,10 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { Board } from './board/Board.js';
 import { PresetInfo, PresetSelect, TURN_CHOICES, TurnSelect } from './Lobby.js';
 import { send, useNet } from './net.js';
+import { say } from './sound.js';
 
 export function RoomScreen({ room }: { room: RoomView }) {
+  useJoinVoice(room);
   const [showChat, setShowChat] = useState(() => window.innerWidth > 900);
   const [showScore, setShowScore] = useState(() => window.innerWidth > 900);
   const playing = room.status === 'playing' && room.game;
@@ -140,6 +142,29 @@ function WaitingRoom({ room }: { room: RoomView }) {
       </div>
     </div>
   );
+}
+
+/**
+ * 누가 들어오면 '○○님이 입장했습니다'를 음성으로 읽는다 (소리 끔이면 조용히).
+ * 방에 들어올 때 받은 지난 대화는 읽지 않고, 그 뒤에 새로 온 시스템 줄만 본다. 내가 들어온 것은 읽지 않는다.
+ */
+function useJoinVoice(room: RoomView) {
+  const myName = useNet().me?.nickname;
+  const last = useRef<{ at: number; text: string } | null | undefined>(undefined);
+  useEffect(() => {
+    const lines = room.chat;
+    const prev = last.current;
+    last.current = lines.length ? { at: lines[lines.length - 1].at, text: lines[lines.length - 1].text } : null;
+    if (prev === undefined) return; // 처음 그릴 때(지난 대화)는 조용히
+    // 지난번 마지막 줄 다음부터가 새 줄 (못 찾으면 그 시각 이후 줄만)
+    let k = -1;
+    if (prev) for (let j = lines.length - 1; j >= 0; j--) if (lines[j].at === prev.at && lines[j].text === prev.text) { k = j; break; }
+    const fresh = prev && k < 0 ? lines.filter((l) => l.at > prev.at) : lines.slice(k + 1);
+    for (const l of fresh) {
+      const m = l.from === null ? /^(.+)님이 들어왔습니다/.exec(l.text) : null;
+      if (m && m[1] !== myName) say(`${m[1]}님이 입장했습니다`);
+    }
+  }, [room.chat, myName]);
 }
 
 const CHAT_SIZE_KEY = 'mighty.chatSize';
