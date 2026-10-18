@@ -40,7 +40,7 @@ export function RoomScreen({ room }: { room: RoomView }) {
           )}
         </div>
       ) : (
-        <div className="room-body">
+        <div className="room-body felt">
           <main>
             <WaitingRoom room={room} />
           </main>
@@ -85,44 +85,60 @@ function Scoreboard({ room, onClose }: { room: RoomView; onClose: () => void }) 
 
 function WaitingRoom({ room }: { room: RoomView }) {
   const host = room.me.isHost;
+  const humans = room.seats.filter((s) => s.occupant === 'human').length;
   return (
     <div className="waiting">
-      <h3>대기실</h3>
-      <ul className="seat-list">
-        {room.seats.map((s) => (
-          <li key={s.seat} data-seat={s.seat}>
-            <span className="seat-no">{s.seat + 1}번</span>
-            <span className="seat-name">
-              {s.occupant === 'empty' ? '(빈자리)' : s.nickname}
-              {s.playerId === room.hostId && ' 👑'}
-              {s.occupant === 'bot' && ' 🤖'}
-            </span>
-            {s.occupant === 'empty' && room.me.seat === null && <button onClick={() => send({ t: 'sit', seat: s.seat })}>앉기</button>}
-            {host && s.occupant === 'empty' && <button onClick={() => send({ t: 'addBot', seat: s.seat })}>봇 추가</button>}
-            {host && s.occupant === 'bot' && <button onClick={() => send({ t: 'removeBot', seat: s.seat })}>봇 빼기</button>}
-            {host && s.occupant === 'human' && s.playerId !== room.me.playerId && (
-              <button onClick={() => send({ t: 'kick', playerId: s.playerId! })}>내보내기</button>
-            )}
-          </li>
-        ))}
-      </ul>
-      {room.spectators.length > 0 && <p>관전: {room.spectators.map((s) => s.nickname).join(', ')}</p>}
-      {host ? (
-        <div className="host-controls">
-          <label>
-            규칙 <PresetSelect value={room.presetId} onChange={(presetId) => send({ t: 'setRoom', presetId })} />
-          </label>
-          <label>
-            차례 제한 시간 <TurnSelect value={room.turnSeconds} onChange={(turnSeconds) => send({ t: 'setRoom', turnSeconds })} />
-          </label>
-          <PresetInfo presetId={room.presetId} />
-          <button className="primary" onClick={() => send({ t: 'start' })}>
-            시작 (빈자리는 봇으로)
-          </button>
+      <div className="waiting-banner">
+        <span className="waiting-tag">대기실</span>
+        <h1 className="waiting-title">{room.name}</h1>
+        <div className="waiting-sub">
+          {room.preset.name} · {room.seats.length}명 · 사람 {humans}명 · 차례 {TURN_CHOICES.find(([s]) => s === room.turnSeconds)?.[1]}
         </div>
-      ) : (
-        <p className="hint">방장이 시작하기를 기다리는 중…</p>
-      )}
+      </div>
+      <div className="waiting-main">
+        <div className="seat-table">
+          {room.seats.map((s) => (
+            <div key={s.seat} className={`seat-card ${s.occupant} ${s.playerId === room.me.playerId ? 'me' : ''}`} data-seat={s.seat}>
+              <div className="seat-no">{s.seat + 1}</div>
+              <div className="seat-avatar">{s.occupant === 'human' ? '🙂' : s.occupant === 'bot' ? '🤖' : ''}</div>
+              <div className="seat-name">
+                {s.occupant === 'empty' ? '빈자리' : s.nickname}
+                {s.playerId === room.hostId && <span className="crown"> 👑</span>}
+              </div>
+              <div className="seat-actions">
+                {s.occupant === 'empty' && room.me.seat === null && <button onClick={() => send({ t: 'sit', seat: s.seat })}>앉기</button>}
+                {host && s.occupant === 'empty' && <button onClick={() => send({ t: 'addBot', seat: s.seat })}>봇 추가</button>}
+                {host && s.occupant === 'bot' && <button onClick={() => send({ t: 'removeBot', seat: s.seat })}>봇 빼기</button>}
+                {host && s.occupant === 'human' && s.playerId !== room.me.playerId && (
+                  <button onClick={() => send({ t: 'kick', playerId: s.playerId! })}>내보내기</button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        {room.spectators.length > 0 && <p className="spectators">관전: {room.spectators.map((s) => s.nickname).join(', ')}</p>}
+        {host ? (
+          <div className="host-controls panel-dark">
+            <h3>방장 설정</h3>
+            <label>
+              규칙 <PresetSelect value={room.presetId} onChange={(presetId) => send({ t: 'setRoom', presetId })} />
+            </label>
+            <label>
+              차례 제한 시간 <TurnSelect value={room.turnSeconds} onChange={(turnSeconds) => send({ t: 'setRoom', turnSeconds })} />
+            </label>
+            <PresetInfo presetId={room.presetId} />
+            <button className="primary big" onClick={() => send({ t: 'start' })}>
+              게임 시작 (빈자리는 봇으로)
+            </button>
+          </div>
+        ) : (
+          <div className="host-controls panel-dark">
+            <h3>규칙: {room.preset.name}</h3>
+            <PresetInfo presetId={room.presetId} />
+            <p className="wait-msg">방장이 시작하기를 기다리는 중…</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

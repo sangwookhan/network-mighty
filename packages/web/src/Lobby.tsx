@@ -125,37 +125,44 @@ export function Lobby() {
   const [turnSeconds, setTurnSeconds] = useState(60);
   const rooms = net.lobby?.rooms ?? [];
   return (
-    <div className="lobby">
-      <header>
+    <div className="lobby felt">
+      <header className="lobby-header">
         <h1>마이티</h1>
-        <span>
-          {net.me?.nickname}님 · 접속 {net.lobby?.online ?? 0}명
+        <span className="who">
+          <b>{net.me?.nickname}</b>님 · 접속 {net.lobby?.online ?? 0}명
         </span>
       </header>
       <div className="lobby-body">
-        <section>
+        <section className="room-list">
           <h2>방 목록</h2>
-          {rooms.length === 0 && <p className="hint">열린 방이 없습니다. 방을 만들어 보세요.</p>}
-          <table className="rooms">
-            <tbody>
-              {rooms.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.name}</td>
-                  <td>{r.presetName}</td>
-                  <td>
-                    사람 {r.humans} · 봇 {r.bots} / {r.players}
-                    {r.spectators > 0 && ` · 관전 ${r.spectators}`}
-                  </td>
-                  <td>{r.status === 'playing' ? '게임 중' : '대기 중'}</td>
-                  <td>
-                    <button onClick={() => send({ t: 'joinRoom', roomId: r.id })}>{r.status === 'playing' ? '관전' : '입장'}</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {rooms.length === 0 && <div className="empty-rooms">열린 방이 없습니다. 오른쪽에서 방을 만들어 보세요.</div>}
+          <div className="room-cards">
+            {rooms.map((r) => {
+              const empty = Math.max(0, r.players - r.humans - r.bots);
+              return (
+                <div key={r.id} className={`room-card st-${r.status}`}>
+                  <div className="room-card-top">
+                    <span className="room-name">{r.name}</span>
+                    <span className={`status-chip ${r.status}`}>{r.status === 'playing' ? '게임 중' : '대기 중'}</span>
+                  </div>
+                  <div className="room-card-mid">
+                    <span className="preset-chip">{r.presetName}</span>
+                    <span className="seat-dots" title={`사람 ${r.humans} · 봇 ${r.bots} · 빈자리 ${empty}`}>
+                      {Array.from({ length: r.humans }, (_, i) => <span key={`h${i}`} className="dot human" />)}
+                      {Array.from({ length: r.bots }, (_, i) => <span key={`b${i}`} className="dot bot">🤖</span>)}
+                      {Array.from({ length: empty }, (_, i) => <span key={`e${i}`} className="dot empty" />)}
+                    </span>
+                    {r.spectators > 0 && <span className="spect">관전 {r.spectators}</span>}
+                  </div>
+                  <button className="join" onClick={() => send({ t: 'joinRoom', roomId: r.id })}>
+                    {r.status === 'playing' ? '관전하기' : empty > 0 || r.bots > 0 ? '입장하기' : '관전하기'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </section>
-        <section className="create">
+        <section className="create panel-dark">
           <h2>방 만들기</h2>
           <label>
             방 이름 <input value={name} onChange={(e) => setName(e.target.value)} placeholder={`${net.me?.nickname}님의 방`} maxLength={20} name="roomName" />
@@ -167,7 +174,7 @@ export function Lobby() {
           <label>
             차례 제한 시간 <TurnSelect value={turnSeconds} onChange={setTurnSeconds} />
           </label>
-          <button className="primary" onClick={() => send({ t: 'createRoom', name, presetId, turnSeconds })}>
+          <button className="primary big" onClick={() => send({ t: 'createRoom', name, presetId, turnSeconds })}>
             방 만들기
           </button>
         </section>
