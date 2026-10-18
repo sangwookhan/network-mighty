@@ -170,7 +170,7 @@ export function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards,
             </div>
           ))}
         </div>
-        <div className="my-tag">
+        <div className="my-tag" data-seat={seat.seat}>
           <NameTag room={room} game={game} seat={seat} />
           <TakenPile room={room} game={game} seat={seat.seat} />
           <BidBubble game={game} seat={seat.seat} room={room} />

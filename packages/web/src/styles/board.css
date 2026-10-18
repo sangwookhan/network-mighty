@@ -45,6 +45,8 @@
 
 /* 가운데: 바닥패, 트릭(낸 카드는 자리에서 가운데로, 가져갈 때는 가져간 사람 쪽으로), 선거 결과 */
 .center { position: absolute; left: 50%; top: 43%; width: 0; height: 0; z-index: 1; }
+/* 가져가는 카드는 내 패·이름표 위로 날아가며 보이도록 */
+.center.collecting { z-index: 5; }
 .kitty { position: absolute; transform: translate(-50%, -50%); }
 .trick-card { position: absolute; left: 0; top: 0; transition: transform 0.35s ease-out, opacity 0.35s; }
 .trick-card.flying { transition: transform 0.55s ease-in, opacity 0.55s ease-in; }

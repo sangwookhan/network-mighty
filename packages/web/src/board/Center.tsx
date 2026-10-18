@@ -22,21 +22,24 @@ export function Center({ room, game, sideOf, kiruda }: { room: RoomView; game: G
   // 마지막 카드가 나오면 서버는 trick(다 찬 상태)과 lastTrick 을 함께 보낸다
   const complete = game.phase === 'play' && !!game.lastTrick && trickCards.length > 0 && trickCards.length === game.active.length;
   const trickKey = `${game.dealNo}:${game.turn}`;
-  const [collect, setCollect] = useState<{ key: string; stage: CollectStage } | null>(null);
+  const [collect, setCollect] = useState<{ key: string; stage: CollectStage; to?: [number, number] | null } | null>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const winnerSeat = complete ? game.lastTrick!.winner : null;
   useEffect(() => {
     if (!complete) return;
     setCollect({ key: trickKey, stage: 'show' });
-    const t1 = setTimeout(() => (setCollect({ key: trickKey, stage: 'fly' }), sfx('collect')), SHOW_MS);
+    // 가져간 사람의 실제 자리(이름표)로 날린다. 배치(6마, 휴대폰)가 달라도 그 사람에게 간다
+    const t1 = setTimeout(() => (setCollect({ key: trickKey, stage: 'fly', to: seatPoint(box.current, winnerSeat) }), sfx('collect')), SHOW_MS);
     const t2 = setTimeout(() => setCollect({ key: trickKey, stage: 'gone' }), SHOW_MS + FLY_MS);
     return () => (clearTimeout(t1), clearTimeout(t2));
-  }, [complete, trickKey]);
+  }, [complete, trickKey, winnerSeat]);
   const stage: CollectStage | null = complete ? (collect?.key === trickKey ? collect.stage : 'show') : null;
   const winner = complete ? game.lastTrick!.winner : null;
   const cards = stage === 'gone' ? [] : trickCards;
   const winnerSide = winner !== null ? (sideOf.get(winner) ?? 'bottom') : null;
 
   return (
-    <div className="center">
+    <div className={`center ${stage === 'fly' ? 'collecting' : ''}`} ref={box}>
       {(game.phase === 'election' || game.phase === 'kill') && (
         <div className="kitty">
           <CardBackView />
@@ -51,7 +54,7 @@ export function Center({ room, game, sideOf, kiruda }: { room: RoomView; game: G
           kiruda={kiruda}
           at={trickOffset(sideOf.get(c.seat) ?? 'bottom', n)}
           from={farOffset(sideOf.get(c.seat) ?? 'bottom', n)}
-          flyTo={stage === 'fly' && winnerSide ? farOffset(winnerSide, n) : null}
+          flyTo={stage === 'fly' && winnerSide ? (collect?.to ? pxTransform(collect.to) : offsetTransform(farOffset(winnerSide, n), ' scale(0.5)')) : null}
           winner={stage === 'show' && c.seat === winner}
         />
       ))}
@@ -67,6 +70,20 @@ export function Center({ room, game, sideOf, kiruda }: { room: RoomView; game: G
   );
 }
 
+/** 그 좌석 이름표의 가운데 (판 가운데 기준 px). 못 찾으면 null */
+function seatPoint(center: HTMLElement | null, seat: number | null): [number, number] | null {
+  if (!center || seat === null) return null;
+  const board = center.closest('.board');
+  const el = board?.querySelector(`[data-seat="${seat}"]`);
+  const target = el?.querySelector('.name-tag') ?? el;
+  if (!target) return null;
+  const r = target.getBoundingClientRect();
+  const o = center.getBoundingClientRect();
+  return [r.left + r.width / 2 - o.left, r.top + r.height / 2 - o.top];
+}
+
+const pxTransform = ([x, y]: [number, number]) => `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(0.5)`;
+
 /** 낸 카드: 자기 자리에서 가운데로 날아오고, 트릭이 끝나면 가져간 사람 쪽으로 날아간다 */
 export function TrickCard({ card, room, kiruda, at, from, flyTo, winner }: {
   card: Card;
@@ -74,7 +91,8 @@ export function TrickCard({ card, room, kiruda, at, from, flyTo, winner }: {
   kiruda: Suit;
   at: [number, number];
   from: [number, number];
-  flyTo: [number, number] | null;
+  /** 날아갈 곳의 transform (가져간 사람 자리) */
+  flyTo: string | null;
   winner: boolean;
 }) {
   const [arrived, setArrived] = useState(false);
@@ -93,7 +111,7 @@ export function TrickCard({ card, room, kiruda, at, from, flyTo, winner }: {
   }, [card]);
   const start = fromPx ? `translate(calc(-50% + ${fromPx[0]}px), calc(-50% + ${fromPx[1]}px))` : offsetTransform(from, ' scale(0.8)');
   const style: CSSProperties = flyTo
-    ? { transform: offsetTransform(flyTo, ' scale(0.5)'), opacity: 0 }
+    ? { transform: flyTo, opacity: 0 }
     : { transform: arrived ? offsetTransform(at) : start };
   return (
     <div ref={ref} className={`trick-card ${winner ? 'winner' : ''} ${flyTo ? 'flying' : ''}`} style={style}>
