@@ -97,6 +97,19 @@ npm install
 npm start                  # 서버를 껐다가 다시 켠다 (진행 중인 방은 사라지므로 아무도 안 칠 때)
 ```
 
+## 원작 분석 자료 다시 만들기 (re)
+
+분석 결과는 `re/*.md` 문서로 저장소에 있다 (요약: [re/README.md](re/README.md)).
+분석에 쓴 디컴파일 코드·원작 그림·화면 시안은 원작(제3자 저작물)에서 나온 것이라 저장소에 넣지 않았다 (`.gitignore`).
+원작 파일(`Mighty.exe`, `Xiao.dll`, `Ghost.dll`, 마이티 네트워크 3.2 배포본)도 저장소에 없으므로 직접 구해야 한다.
+
+원작 파일이 있으면 [re/tools/README.md](re/tools/README.md) 순서대로 다시 만든다:
+
+1. Ghidra 헤드리스 디컴파일 → `re/decompiled/*.c`
+2. CP949 한글 문자열 주석 → `re/decompiled/*.annotated.c`
+3. 카드 그림·다이얼로그 추출 → `re/resources/`
+4. 원작 화면 시안 → `re/mockups/`
+
 ## 테스트
 
 ```bash
