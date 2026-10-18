@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-export type SoundName = 'shuffle' | 'deal' | 'play' | 'collect' | 'turn' | 'elected' | 'win' | 'lose';
+export type SoundName = 'shuffle' | 'deal' | 'play' | 'collect' | 'turn' | 'elected' | 'win' | 'lose' | 'special' | 'cut';
 
 const KEY = 'mighty.sound';
 let enabled = localStorage.getItem(KEY) !== 'off';
@@ -100,5 +100,29 @@ export function play(name: SoundName) {
     case 'lose':
       [392, 330, 262].forEach((f, i) => tone(a, f, i * 0.18, 0.35, 'sine', 0.12));
       break;
+    case 'special': // 마이티·조커·조커콜: 반짝이는 소리
+      [1047, 1319, 1568, 2093].forEach((f, i) => tone(a, f, i * 0.05, 0.25, 'triangle', 0.08));
+      break;
+    case 'cut': // 간·오버간: 탁 치는 소리
+      swish(a, 0, 0.1, 0.4, 600);
+      tone(a, 120, 0, 0.12, 'square', 0.08);
+      break;
   }
+}
+
+/**
+ * 짧은 말(마이티!, 조커! …)을 브라우저 음성 합성으로 읽는다. 소리 끔이면 아무것도 안 한다.
+ * 한국어 목소리가 없는 기기에서는 기본 목소리로 읽는다.
+ */
+export function say(text: string) {
+  if (!enabled || typeof speechSynthesis === 'undefined') return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ko-KR';
+  const ko = speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith('ko'));
+  if (ko) u.voice = ko;
+  u.rate = 1.15;
+  u.pitch = 1.1;
+  u.volume = 0.9;
+  speechSynthesis.cancel(); // 앞의 말이 밀리지 않게
+  speechSynthesis.speak(u);
 }

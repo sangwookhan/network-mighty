@@ -2,7 +2,9 @@
 
 import type { GameView, RoomView } from '@mighty/protocol';
 import { useEffect, useRef } from 'react';
-import { play as sfx } from '../sound.js';
+import { NO_SUIT } from '@mighty/engine';
+import { play as sfx, say } from '../sound.js';
+import { calloutFor } from './callouts.js';
 
 /** 판의 변화에 맞춰 효과음을 낸다 (처음 그릴 때는 조용히) */
 export function useGameSounds(room: RoomView, game: GameView) {
@@ -14,7 +16,15 @@ export function useGameSounds(room: RoomView, game: GameView) {
     prev.current = now;
     if (!p) return;
     if (now.deal !== p.deal) sfx('shuffle');
-    if (now.trick !== p.trick && cards > 0) sfx('play');
+    if (now.trick !== p.trick && cards > 0) {
+      sfx('play');
+      // 마이티·조커·조커콜·간·오버간은 외치기
+      const call = calloutFor(game.trick!, room.rules, game.contract?.kiruda ?? NO_SUIT);
+      if (call) {
+        sfx(call === '간' || call === '오버간' ? 'cut' : 'special');
+        say(`${call}!`);
+      }
+    }
     if (now.req !== null && now.req !== p.req) {
       const kind = game.myRequest?.kind;
       // 당선: 축하음 (바닥패 받는 소리는 내 패 애니메이션이 낸다)
