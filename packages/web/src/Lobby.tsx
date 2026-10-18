@@ -1,4 +1,5 @@
 import { PRESETS, describePreset } from '@mighty/engine';
+import { BOT_LEVELS, type BotLevel } from '@mighty/protocol';
 import { useEffect, useState } from 'react';
 import { chooseNewNickname, continueAsLast, send, sendHello, takeBack, useNet } from './net.js';
 
@@ -106,6 +107,21 @@ export const TURN_CHOICES = [
   [120, '120초'],
 ] as const;
 
+/** 봇 수준 고르기 (방 단위) */
+export function BotLevelSelect({ value, onChange }: { value: BotLevel; onChange: (l: BotLevel) => void }) {
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value as BotLevel)} name="botLevel" title={BOT_LEVELS.find((l) => l.id === value)?.hint}>
+      {BOT_LEVELS.map((l) => (
+        <option key={l.id} value={l.id}>
+          {l.name} — {l.hint}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+export const botLevelName = (l: BotLevel | undefined) => BOT_LEVELS.find((x) => x.id === (l ?? 'normal'))!.name;
+
 export function TurnSelect({ value, onChange, disabled }: { value: number; onChange: (s: number) => void; disabled?: boolean }) {
   return (
     <select
@@ -129,6 +145,7 @@ export function Lobby() {
   const [name, setName] = useState('');
   const [presetId, setPresetId] = useState(1);
   const [turnSeconds, setTurnSeconds] = useState(60);
+  const [botLevel, setBotLevel] = useState<BotLevel>('normal');
   const rooms = net.lobby?.rooms ?? [];
   return (
     <div className="lobby felt">
@@ -153,6 +170,7 @@ export function Lobby() {
                   </div>
                   <div className="room-card-mid">
                     <span className="preset-chip">{r.presetName}</span>
+                    <span className={`level-chip ${r.botLevel ?? 'normal'}`}>봇 {botLevelName(r.botLevel)}</span>
                     <span className="seat-dots" title={`사람 ${r.humans} · 봇 ${r.bots} · 빈자리 ${empty}`}>
                       {Array.from({ length: r.humans }, (_, i) => <span key={`h${i}`} className="dot human" />)}
                       {Array.from({ length: r.bots }, (_, i) => <span key={`b${i}`} className="dot bot">🤖</span>)}
@@ -180,7 +198,10 @@ export function Lobby() {
           <label>
             차례 제한 시간 <TurnSelect value={turnSeconds} onChange={setTurnSeconds} /> <span className="hint">(주공 정리는 4배)</span>
           </label>
-          <button className="primary big" onClick={() => send({ t: 'createRoom', name, presetId, turnSeconds })}>
+          <label>
+            봇 수준 <BotLevelSelect value={botLevel} onChange={setBotLevel} />
+          </label>
+          <button className="primary big" onClick={() => send({ t: 'createRoom', name, presetId, turnSeconds, botLevel })}>
             방 만들기
           </button>
         </section>

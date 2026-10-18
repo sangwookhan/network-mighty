@@ -2,7 +2,8 @@
 
 import { randomBytes, randomInt } from 'node:crypto';
 import { PRESETS, describePreset, presetRules, type Rules } from '@mighty/engine';
-import { PROTOCOL_VERSION, parseClientMessage, type ChatLine, type ClientMessage, type RoomState, type RoomSummary, type SeatView, type ServerMessage } from '@mighty/protocol';
+import { BOT_LEVELS, PROTOCOL_VERSION, parseClientMessage, type BotLevel, type ChatLine, type ClientMessage, type RoomState, type RoomSummary, type SeatView, type ServerMessage } from '@mighty/protocol';
+import type { BotKind } from './bots.js';
 import { DEFAULT_TIMING, Game, type GameHost, type Timing } from './game.js';
 
 export interface Connection {
@@ -153,7 +154,7 @@ export class Hub {
         if (room) return err('이미 방에 있습니다');
         if (!PRESETS.some((p) => p.id === msg.presetId)) return err('알 수 없는 규칙입니다');
         const name = String(msg.name ?? '').trim().slice(0, 20) || `${user.nickname}님의 방`;
-        const r = new Room(this, newId(4), name, user.id, msg.presetId, normalizeTurnSeconds(msg.turnSeconds));
+        const r = new Room(this, newId(4), name, user.id, msg.presetId, normalizeTurnSeconds(msg.turnSeconds), msg.botLevel ?? 'normal');
         this.rooms.set(r.id, r);
         r.join(user);
         return;
@@ -228,12 +229,18 @@ export class Room implements GameHost {
     public hostId: string,
     public presetId: number,
     public turnSeconds: number,
+    /** 봇 수준 (방 단위): 초급은 가끔 실수하는 봇, 중급은 smart 봇 */
+    public botLevel: BotLevel = 'normal',
   ) {
     this.rules = presetRules(presetId);
     this.resizeSeats();
   }
 
   // ---- GameHost ----
+
+  botKind(): BotKind {
+    return this.botLevel === 'easy' ? 'easy' : 'smart';
+  }
 
   get money(): number[] {
     return this.moneyView;
@@ -373,6 +380,11 @@ export class Room implements GameHost {
           this.rules = presetRules(msg.presetId);
           this.resizeSeats();
           for (const u of this.humans()) this.sendStatic(u);
+        }
+        if (msg.botLevel !== undefined && msg.botLevel !== this.botLevel) {
+          this.botLevel = msg.botLevel;
+          this.systemChat(`방장이 봇 수준을 ${BOT_LEVELS.find((l) => l.id === msg.botLevel)!.name}으로 바꿨습니다`);
+          this.hub.broadcastLobby();
         }
         if (msg.turnSeconds !== undefined) {
           const t = normalizeTurnSeconds(msg.turnSeconds);
@@ -525,6 +537,7 @@ export class Room implements GameHost {
       bots: this.seats.filter((s) => s.occupant === 'bot').length,
       spectators: this.spectators.size,
       status: this.status,
+      botLevel: this.botLevel,
     };
   }
 
@@ -548,6 +561,7 @@ export class Room implements GameHost {
       hostId: this.hostId,
       presetId: this.presetId,
       turnSeconds: this.turnSeconds,
+      botLevel: this.botLevel,
       status: this.status,
       paused: this.game?.isPaused ? { by: this.pausedBy ?? '?' } : null,
       seats,

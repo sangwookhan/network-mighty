@@ -11,6 +11,8 @@ import { PARAMS } from '../src/smartBot.js';
 if (process.env.PARAMS) Object.assign(PARAMS, JSON.parse(process.env.PARAMS));
 // 검증용: 다른 판으로 다시 재기 (SEED=1000 npx tsx scripts/bench.ts)
 const SEED = Number(process.env.SEED ?? 0);
+// 대결할 두 봇 (KINDS=smart,easy npx tsx scripts/bench.ts). 기본은 smart 대 simple
+const [A, B] = (process.env.KINDS ?? 'smart,simple').split(',') as [BotKind, BotKind];
 
 function seeded(seed: number) {
   let a = seed >>> 0;
@@ -37,7 +39,7 @@ const empty = (): KindStats => ({ delta: 0, seatDeals: 0, master: 0, masterWins:
 function runMatch(presetId: number, deals: number, kinds: BotKind[], seed: number): Promise<Record<BotKind, KindStats>> {
   const rules = presetRules(presetId);
   const money = Array(rules.players).fill(1_000_000);
-  const stats: Record<BotKind, KindStats> = { simple: empty(), smart: empty() };
+  const stats: Record<BotKind, KindStats> = { simple: empty(), smart: empty(), easy: empty() };
   const seen = new Set<number>();
   return new Promise((resolve, reject) => {
     let game!: Game;
@@ -95,12 +97,12 @@ async function main() {
   console.log('프리셋        | 봇     | 판당 점수 | 주공 횟수 | 주공 승률 | 평균 공약 | 주공 시 여당 점수');
   for (const id of presets) {
     const n = presetRules(id).players;
-    const a: BotKind[] = Array.from({ length: n }, (_, i) => (i % 2 === 0 ? 'smart' : 'simple'));
-    const b: BotKind[] = a.map((k) => (k === 'smart' ? 'simple' : 'smart'));
+    const a: BotKind[] = Array.from({ length: n }, (_, i) => (i % 2 === 0 ? A : B));
+    const b: BotKind[] = a.map((k) => (k === A ? B : A));
     const r1 = await runMatch(id, deals, a, SEED + id * 1000 + 1);
     const r2 = await runMatch(id, deals, b, SEED + id * 1000 + 2);
     const name = PRESETS.find((p) => p.id === id)!.name;
-    for (const kind of ['smart', 'simple'] as BotKind[]) {
+    for (const kind of [A, B]) {
       const s = merge(r1[kind], r2[kind]);
       console.log(
         `${name.padEnd(10)} | ${kind.padEnd(6)} | ${fmt(s.delta / s.seatDeals)} | ${String(s.master).padStart(8)} | ${fmt((100 * s.masterWins) / Math.max(1, s.master), 1)}% | ${fmt(s.goalSum / Math.max(1, s.master), 1)} | ${fmt(s.defenderPts / Math.max(1, s.master), 1)}`,

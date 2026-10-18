@@ -350,6 +350,28 @@ describe('통합: 사람 3명 + 봇', () => {
     hub.closeRoom(hub.rooms.get(a.room!.id)!);
   });
 
+  it('봇 수준: 방을 만들 때 고르고, 방장이 바꾸며, 로비에 보인다', async () => {
+    const hub = new Hub({ timing: FAST });
+    const a = new Client(hub, '가');
+    a.connect();
+    await until(() => !!a.playerId);
+    a.send({ t: 'createRoom', name: '초급방', presetId: 1, turnSeconds: 0, botLevel: 'easy' });
+    await until(() => !!a.room);
+    const room = hub.rooms.get(a.room!.id)!;
+    expect(a.room!.botLevel).toBe('easy');
+    expect(room.botKind()).toBe('easy');
+    expect(hub.roomSummaries()[0].botLevel).toBe('easy');
+    a.send({ t: 'setRoom', botLevel: 'normal' });
+    await until(() => a.room?.botLevel === 'normal');
+    expect(room.botKind()).toBe('smart');
+    // 모르는 수준은 형식 검사에서 막힌다
+    const before = a.errors.length;
+    a.send({ t: 'setRoom', botLevel: 'hard' } as unknown as ClientMessage);
+    await until(() => a.errors.length > before);
+    expect(a.room!.botLevel).toBe('normal');
+    hub.closeRoom(room);
+  });
+
   it('프로토콜 버전이 다르면 접속을 거절한다', async () => {
     const hub = new Hub({ timing: FAST });
     const got: ServerMessage[] = [];

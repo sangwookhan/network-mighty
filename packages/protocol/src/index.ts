@@ -20,7 +20,7 @@ export const PROTOCOL_VERSION = 3;
 
 export type ClientMessage =
   | { t: 'hello'; version?: number; token?: string; nickname?: string }
-  | { t: 'createRoom'; name: string; presetId: number; turnSeconds: number }
+  | { t: 'createRoom'; name: string; presetId: number; turnSeconds: number; botLevel?: BotLevel }
   | { t: 'joinRoom'; roomId: string }
   | { t: 'leaveRoom' }
   | { t: 'sit'; seat: number }
@@ -28,7 +28,7 @@ export type ClientMessage =
   | { t: 'addBot'; seat: number }
   | { t: 'removeBot'; seat: number }
   | { t: 'kick'; playerId: string }
-  | { t: 'setRoom'; presetId?: number; turnSeconds?: number }
+  | { t: 'setRoom'; presetId?: number; turnSeconds?: number; botLevel?: BotLevel }
   | { t: 'start' }
   /** 게임 일시정지/다시 시작 (자리에 앉은 사람 누구나) */
   | { t: 'pause'; paused: boolean }
@@ -64,6 +64,13 @@ export type ServerMessage =
   | { t: 'versionMismatch'; serverVersion: number }
   | { t: 'error'; message: string };
 
+/** 방의 봇 수준: 초급(easy) / 중급(normal). 없으면 중급 */
+export type BotLevel = 'easy' | 'normal';
+export const BOT_LEVELS: { id: BotLevel; name: string; hint: string }[] = [
+  { id: 'easy', name: '초급', hint: '가끔 실수하는 봇 (처음 하는 사람에게)' },
+  { id: 'normal', name: '중급', hint: '지금까지의 봇' },
+];
+
 export interface RoomSummary {
   id: string;
   name: string;
@@ -74,6 +81,7 @@ export interface RoomSummary {
   bots: number;
   spectators: number;
   status: 'waiting' | 'playing';
+  botLevel: BotLevel;
 }
 
 export interface SeatView {
@@ -103,6 +111,7 @@ export interface RoomView {
   rules: Rules;
   preset: PresetDescription;
   turnSeconds: number;
+  botLevel: BotLevel;
   status: 'waiting' | 'playing';
   /** 일시정지 중이면 누른 사람 */
   paused: { by: string } | null;

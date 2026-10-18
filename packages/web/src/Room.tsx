@@ -1,7 +1,7 @@
 import type { RoomView } from '@mighty/protocol';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Board } from './board/Board.js';
-import { PresetInfo, PresetSelect, TURN_CHOICES, TurnSelect } from './Lobby.js';
+import { BotLevelSelect, PresetInfo, PresetSelect, TURN_CHOICES, TurnSelect, botLevelName } from './Lobby.js';
 import { send, useNet } from './net.js';
 import { SoundMenu } from './SoundMenu.js';
 import { speak } from './voice.js';
@@ -17,7 +17,7 @@ export function RoomScreen({ room }: { room: RoomView }) {
       <header className="menu-bar">
         <b>{room.name}</b>
         <span>
-          {room.preset.name} · 차례{' '}
+          {room.preset.name} · 봇 {botLevelName(room.botLevel)} · 차례{' '}
           {/* 방장은 게임 중에도 차례 제한 시간을 바꿀 수 있다 */}
           {room.me.isHost ? (
             <TurnSelect value={room.turnSeconds} onChange={(turnSeconds) => send({ t: 'setRoom', turnSeconds })} />
@@ -96,7 +96,7 @@ function WaitingRoom({ room }: { room: RoomView }) {
         <span className="waiting-tag">대기실</span>
         <h1 className="waiting-title">{room.name}</h1>
         <div className="waiting-sub">
-          {room.preset.name} · {room.seats.length}명 · 사람 {humans}명 · 차례 {TURN_CHOICES.find(([s]) => s === room.turnSeconds)?.[1]}
+          {room.preset.name} · {room.seats.length}명 · 사람 {humans}명 · 봇 {botLevelName(room.botLevel)} · 차례 {TURN_CHOICES.find(([s]) => s === room.turnSeconds)?.[1]}
         </div>
       </div>
       <div className="waiting-main">
@@ -129,6 +129,9 @@ function WaitingRoom({ room }: { room: RoomView }) {
             </label>
             <label>
               차례 제한 시간 <TurnSelect value={room.turnSeconds} onChange={(turnSeconds) => send({ t: 'setRoom', turnSeconds })} /> <span className="hint">(주공 정리는 4배)</span>
+            </label>
+            <label>
+              봇 수준 <BotLevelSelect value={room.botLevel ?? 'normal'} onChange={(botLevel) => send({ t: 'setRoom', botLevel })} />
             </label>
             <PresetInfo presetId={room.presetId} />
             <button className="primary big" onClick={() => send({ t: 'start' })}>

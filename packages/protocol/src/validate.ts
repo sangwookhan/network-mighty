@@ -11,6 +11,8 @@ const isStr = (x: unknown, max: number): x is string => typeof x === 'string' &&
 const optStr = (x: unknown, max: number) => x === undefined || isStr(x, max);
 const optInt = (x: unknown, min?: number, max?: number) => x === undefined || isInt(x, min, max);
 
+const optLevel = (x: unknown) => x === undefined || x === 'easy' || x === 'normal';
+
 const SEAT = [0, 5] as const;
 const CARD = [0, 53] as const;
 const SUIT = [0, 4] as const;
@@ -68,7 +70,7 @@ export function parseClientMessage(m: unknown): ClientMessage | null {
       case 'hello':
         return optInt(m.version, 0, 1e6) && optStr(m.token, 64) && optStr(m.nickname, 40);
       case 'createRoom':
-        return isStr(m.name, 60) && isInt(m.presetId, 1, 99) && isInt(m.turnSeconds, 0, 3600);
+        return isStr(m.name, 60) && isInt(m.presetId, 1, 99) && isInt(m.turnSeconds, 0, 3600) && optLevel(m.botLevel);
       case 'joinRoom':
         return isStr(m.roomId, 32);
       case 'leaveRoom':
@@ -82,7 +84,7 @@ export function parseClientMessage(m: unknown): ClientMessage | null {
       case 'kick':
         return isStr(m.playerId, 64);
       case 'setRoom':
-        return optInt(m.presetId, 1, 99) && optInt(m.turnSeconds, 0, 3600);
+        return optInt(m.presetId, 1, 99) && optInt(m.turnSeconds, 0, 3600) && optLevel(m.botLevel);
       case 'chat':
         return isStr(m.text, 1000);
       case 'pause':
