@@ -1,0 +1,130 @@
+/* 게임판: 좌석 배치(원작 배치 참고, re/04_screen_layout.md), 가운데 트릭, 내 패, 상태 표시줄, 떠 있는 창 */
+.room { height: 100vh; display: flex; flex-direction: column; }
+.room .room-body { flex: 1; overflow: auto; }
+.menu-bar { background: #ece9d8; color: #000; padding: 3px 8px; border-bottom: 1px solid #aaa; gap: 8px; font-size: 13px; }
+.menu-bar button { padding: 1px 8px; font-size: 12px; }
+.room-play { position: relative; flex: 1; min-height: 0; }
+.board { position: absolute; inset: 0; overflow: hidden; color: #fff; background: #008000; }
+.board .card.small { width: calc(var(--cw) * 0.72); height: calc(var(--ch) * 0.72); }
+.board .card { width: var(--cw); height: var(--ch); }
+
+/* 다른 사람 자리. 위쪽 두 사람은 공약 상자(왼쪽 위)와 겹치지 않도록 조금 안쪽으로 */
+.opponent { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 2; }
+.opponent.out { opacity: 0.45; }
+.side-top-left { top: 6px; left: 31%; transform: translateX(-50%); }
+.side-top { top: 6px; left: 50%; transform: translateX(-50%); }
+.side-top-right { top: 6px; left: 69%; transform: translateX(-50%); }
+.side-left { left: 6px; top: 40%; transform: translateY(-50%); flex-direction: row; align-items: flex-start; }
+.side-right { right: 6px; top: 40%; transform: translateY(-50%); flex-direction: row-reverse; align-items: flex-start; }
+.side-bottom { bottom: 34px; left: 50%; transform: translateX(-50%); }
+/* 5마·6마: 좌우 사람은 아래쪽 */
+.players-5 .side-left, .players-5 .side-right, .players-6 .side-left, .players-6 .side-right { top: 58%; }
+.side-bottom-left { bottom: 30px; left: 3%; flex-direction: row; align-items: flex-end; }
+.opponent .meta { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.side-left .meta { align-items: flex-start; }
+.side-right .meta { align-items: flex-end; }
+.stack { display: flex; }
+.stack > .card + .card { margin-left: calc(var(--step) - var(--cw) * 0.72); }
+.stack.vertical { flex-direction: column; }
+.stack.vertical > .card + .card { margin-left: 0; margin-top: calc(var(--step) - var(--ch) * 0.72); }
+
+/* 이름: 굵은 흰 글씨 + 검은 외곽선, 여당은 하늘색, 차례면 흰 상자 */
+.name-tag { display: flex; align-items: center; gap: 5px; padding: 2px 8px; border: 2px solid transparent; border-radius: 3px; background: none; white-space: nowrap; font-size: 15px;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+.name-tag.turn { border-color: #fff; background: rgba(0, 0, 0, 0.15); }
+.name-tag .nick { font-weight: bold; }
+.name-tag.defender .nick { color: #00ffff; }
+.name-tag .money { font-size: 12px; opacity: 0.85; font-weight: normal; }
+.countdown { color: #ffd54f; font-size: 12px; }
+.countdown.urgent { color: #ff5252; font-weight: bold; }
+
+/* 딴 점수카드: 숫자 대신 카드가 잘 보이게 (모서리의 숫자·무늬가 보일 만큼 펼침) */
+.taken { display: flex; align-items: center; }
+.taken .card.small { width: calc(var(--cw) * 0.56); height: calc(var(--ch) * 0.56); }
+.taken .card + .card { margin-left: calc(var(--cw) * -0.34); }
+
+/* 가운데: 바닥패, 트릭(낸 카드는 자리에서 가운데로, 가져갈 때는 가져간 사람 쪽으로), 선거 결과 */
+.center { position: absolute; left: 50%; top: 43%; width: 0; height: 0; z-index: 1; }
+.kitty { position: absolute; transform: translate(-50%, -50%); }
+.trick-card { position: absolute; left: 0; top: 0; transition: transform 0.35s ease-out, opacity 0.35s; }
+.trick-card.flying { transition: transform 0.55s ease-in, opacity 0.55s ease-in; }
+.trick-card.winner .card { outline: 3px solid #ffd54f; border-radius: 4px; }
+.center-flash { position: absolute; transform: translate(-50%, -50%); font-size: 30px; font-weight: bold; color: #ffd54f; text-shadow: 0 2px 4px #000; z-index: 3; }
+.center-note { position: absolute; transform: translate(-50%, calc(var(--ch) * 1.25)); white-space: nowrap; font-size: 13px; background: rgba(0, 0, 0, 0.35); padding: 2px 8px; border-radius: 4px; }
+.election-box { position: absolute; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.6); padding: 6px 14px; font-size: 22px; white-space: nowrap; text-shadow: 1px 1px 0 #000; }
+
+/* 내 패: 고정 자리, 다시 배치할 때 미끄러지듯 이동 */
+.my-area { position: absolute; bottom: 30px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 4; pointer-events: none; }
+.my-area > * { pointer-events: auto; }
+.players-6 .my-area { left: 36%; right: 0; }
+.my-row { display: flex; align-items: flex-end; gap: 10px; }
+.my-hand-cards { position: relative; height: var(--ch); transition: width 0.35s ease; }
+.my-hand-cards .slot { position: absolute; top: 0; transition: left 0.35s ease; }
+/* 내 차례: 낼 수 있는 카드는 노란 테두리로 살짝 올리고, 못 내는 카드는 아주 조금만 어둡게 (카드가 잘 보이도록) */
+.my-hand-cards .card.disabled { filter: brightness(0.85); }
+.my-hand-cards .card.clickable { box-shadow: 0 0 0 3px #ffd54f; border-radius: 4px; transform: translateY(calc(var(--ch, 96px) / -25)); }
+.my-hand-cards .card.clickable:hover { transform: translateY(calc(var(--ch, 96px) / -10)); }
+.my-hand-cards .card.selected, .my-hand-cards .card.selected:hover { transform: translateY(calc(var(--ch, 96px) / -5)); box-shadow: 0 0 0 3px #00ffff; }
+.my-prompt { margin-bottom: 14px; color: #ffd54f; font-weight: bold; text-shadow: 0 1px 3px #000; }
+.my-tag { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.my-discards { font-size: 12px; opacity: 0.8; }
+
+/* 원작 상태 표시줄: 기루다 | 공약 | 프렌드 | 메시지 */
+.status-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 24px; background: #ece9d8; color: #000; display: flex; align-items: center; gap: 10px; padding: 0 8px; font-size: 13px; border-top: 1px solid #999; z-index: 7; white-space: nowrap; overflow: hidden; }
+.status-bar .spacer { flex: 1; }
+.status-bar .countdown { color: #b00; }
+.status-bar .spectating { color: #555; }
+.status-bar .pane { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 18px; padding: 0 4px; border: 1px solid; border-color: #888 #fff #fff #888; background: #ece9d8; }
+.status-bar .icon-pane .icon { background: none; width: auto; height: auto; margin: 0; }
+.status-bar .icon-pane .icon.red { color: #d40000; }
+.status-bar .none { color: #d40000; font-weight: bold; }
+.status-bar .friend-pane { min-width: 90px; }
+.status-bar .paused-tag { color: #b00; font-weight: bold; }
+
+/* 떠 있는 창: 점수, 채팅 */
+.float-window { position: absolute; background: #ece9d8; color: #000; border: 1px solid #777; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4); font-size: 12px; z-index: 8; }
+.float-title { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(#3a6fd8, #2456c4); color: #fff; padding: 1px 4px 1px 8px; font-weight: bold; }
+.float-title button { padding: 0 5px; font-size: 11px; line-height: 14px; }
+.score-window { top: 6px; left: 50%; transform: translateX(-50%); min-width: 170px; }
+.score-window table { width: 100%; border-collapse: collapse; }
+.score-window th { font-weight: normal; color: #444; padding: 2px 6px; }
+.score-window td { padding: 1px 6px; }
+.score-window tr.me td { font-weight: bold; }
+.chat-window { left: 8px; bottom: 32px; width: 210px; }
+/* 6마는 왼쪽 아래에 사람이 앉으므로 채팅 창을 왼쪽 위로 */
+.room-play.players-6 .chat-window { bottom: auto; top: 8px; }
+.chat-window .chat { height: 170px; border: 0; border-radius: 0; }
+
+/* 큰 화면에서는 글씨도 카드와 함께 키운다 (--s = 카드 배율) */
+.board .name-tag { font-size: calc(11px + 4px * var(--s, 1)); }
+.board .name-tag .money { font-size: calc(9px + 3px * var(--s, 1)); }
+.board .my-prompt { font-size: calc(10px + 5px * var(--s, 1)); }
+.board .election-box { font-size: calc(12px + 10px * var(--s, 1)); }
+
+/* ===== 세로 화면 (휴대폰, 3분할 시험 화면) ===== */
+.board.portrait .opponent { transform: none; gap: 2px; }
+.board.portrait .opponent .meta { align-items: center; }
+.board.portrait .stack .card.small { width: calc(var(--cw) * 0.38); height: calc(var(--ch) * 0.38); }
+.board.portrait .stack > .card + .card { margin-left: calc(5px - var(--cw) * 0.38); margin-top: 0; }
+.board.portrait .stack.vertical { flex-direction: row; }
+.board.portrait .name-tag { font-size: 13px; padding: 1px 4px; }
+.board.portrait .taken .card.small { width: calc(var(--cw) * 0.42); height: calc(var(--ch) * 0.42); }
+.board.portrait .taken .card + .card { margin-left: calc(var(--cw) * -0.27); }
+/* 위쪽 두 줄: 윗줄(왼쪽 위/위/오른쪽 위), 아랫줄(왼쪽/오른쪽, 6마의 왼쪽 아래) */
+.board.portrait .side-top-left { top: 4px; left: 4px; }
+.board.portrait .side-top { top: 4px; left: 50%; transform: translateX(-50%); }
+.board.portrait .side-top-right { top: 4px; right: 4px; left: auto; }
+.board.portrait .side-left { top: 17%; left: 4px; flex-direction: column; align-items: flex-start; }
+.board.portrait .side-right { top: 17%; right: 4px; flex-direction: column; align-items: flex-end; }
+.board.portrait .side-bottom-left { top: 17%; bottom: auto; left: 50%; transform: translateX(-50%); flex-direction: column; }
+.board.portrait.players-3 .side-left, .board.portrait.players-3 .side-right { top: 4px; }
+.board.portrait .side-left .meta { align-items: flex-start; }
+.board.portrait .side-right .meta { align-items: flex-end; }
+.board.portrait .center { top: 47%; }
+.board.portrait .election-box { font-size: 16px; }
+.board.portrait .my-area { bottom: 28px; }
+.board.portrait .my-row { flex-direction: column-reverse; align-items: center; gap: 4px; }
+.board.portrait .my-tag { flex-direction: row; align-items: center; }
+.board.portrait .players-6 .my-area, .board.portrait.players-6 .my-area { left: 0; }
+.board.portrait .status-bar .friend-pane { min-width: 0; }
+.board.portrait .status-bar { font-size: 12px; gap: 6px; }

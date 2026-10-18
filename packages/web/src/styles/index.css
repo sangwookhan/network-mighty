@@ -1,0 +1,5 @@
+/* 화면 스타일: 공통 → 로비·대기실 → 게임판 → 상자 순서로 읽는다 (효과는 board/Board.tsx 가 fx.css 로 따로 읽음) */
+@import './base.css';
+@import './lobby.css';
+@import './board.css';
+@import './boxes.css';

@@ -3,7 +3,7 @@
 import type { RoomView } from '@mighty/protocol';
 import { createRoot } from 'react-dom/client';
 import { RoomScreen } from '../Room.js';
-import '../style.css';
+import '../styles/index.css';
 
 const fixtures = import.meta.glob<RoomView>('../../dev/fixtures/*.json', { eager: true, import: 'default' });
 const byName = Object.fromEntries(Object.entries(fixtures).map(([path, room]) => [path.split('/').pop()!.replace('.json', ''), room]));

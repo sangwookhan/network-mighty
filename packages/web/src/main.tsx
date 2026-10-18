@@ -2,7 +2,7 @@ import { createRoot } from 'react-dom/client';
 import { Lobby, NicknameScreen } from './Lobby.js';
 import { useNet } from './net.js';
 import { RoomScreen } from './Room.js';
-import './style.css';
+import './styles/index.css';
 
 function App() {
   const net = useNet();

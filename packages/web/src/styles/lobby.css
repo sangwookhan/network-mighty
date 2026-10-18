@@ -1,0 +1,89 @@
+/* 로비와 대기실: 게임판과 같은 초록 판 분위기 */
+header { display: flex; align-items: center; gap: 12px; padding: 8px 14px; background: #1f6f43; color: #fff; }
+header h1, header h2 { margin: 0; }
+header .spacer { flex: 1; }
+
+.lobby-body { display: flex; gap: 24px; padding: 16px; flex-wrap: wrap; }
+.lobby-body section { flex: 1; min-width: 280px; }
+.create { display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
+.preset-info { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; font-size: 13px; }
+.preset-info ul { margin: 4px 0; padding-left: 18px; }
+.preset-info .diff-title { margin-top: 6px; font-weight: bold; color: #1f6f43; }
+
+.room-body { display: flex; gap: 12px; padding: 12px; align-items: flex-start; }
+.room-body main { flex: 1; min-width: 0; }
+.room-body aside { width: 260px; display: flex; flex-direction: column; gap: 8px; }
+.chat { background: #fff; border: 1px solid #ddd; border-radius: 6px; display: flex; flex-direction: column; height: 320px; }
+.chat .lines { flex: 1; overflow-y: auto; padding: 6px; font-size: 13px; }
+.chat .system { color: #1f6f43; }
+.chat input { width: 100%; border: 0; border-top: 1px solid #ddd; padding: 6px; }
+
+.seat-no { width: 36px; color: #777; }
+.seat-name { flex: 1; }
+.host-controls { display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
+
+/* 좁은 화면: 채팅을 아래로 */
+@media (max-width: 900px) {
+  .room-body { flex-direction: column; padding: 6px; }
+  .room-body main { width: 100%; }
+  .room-body aside { width: 100%; }
+  .chat { height: 160px; }
+  .card { width: 53px; height: 72px; }
+  header { padding: 6px 8px; gap: 6px; flex-wrap: wrap; }
+}
+
+.felt { background: radial-gradient(ellipse at top, #0f8a35 0%, #007a2a 45%, #005c1f 100%); color: #fff; min-height: 100vh; }
+.room-body.felt { min-height: 0; }
+.lobby-header { background: rgba(0, 0, 0, 0.35); border-bottom: 2px solid #ffd54f; }
+.lobby-header h1 { font-size: 30px; color: #ffd54f; text-shadow: 2px 2px 0 #000; letter-spacing: 2px; }
+.lobby-header .who b { color: #00ffff; }
+.lobby .lobby-body { padding: 20px 24px; gap: 28px; }
+.lobby h2 { color: #ffd54f; text-shadow: 1px 1px 0 #000; font-size: 22px; }
+.empty-rooms { padding: 40px; text-align: center; font-size: 18px; border: 2px dashed rgba(255, 255, 255, 0.4); border-radius: 10px; color: #dfd; }
+.room-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.room-card { background: rgba(0, 0, 0, 0.38); border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
+.room-card.st-waiting { border-color: #ffd54f; }
+.room-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.room-name { font-size: 26px; font-weight: bold; text-shadow: 2px 2px 0 #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status-chip { flex: none; font-size: 13px; font-weight: bold; padding: 2px 10px; border-radius: 12px; }
+.status-chip.waiting { background: #ffd54f; color: #000; }
+.status-chip.playing { background: #ff7043; color: #fff; }
+.room-card-mid { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.preset-chip { background: #fff; color: #1f6f43; font-weight: bold; padding: 2px 10px; border-radius: 4px; }
+.seat-dots { display: inline-flex; gap: 4px; }
+.dot { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
+.dot.human { background: #00e5ff; box-shadow: 0 0 0 2px #fff inset; }
+.dot.bot { background: #9e9e9e; }
+.dot.empty { border: 2px dashed rgba(255, 255, 255, 0.7); }
+.spect { font-size: 13px; color: #ddd; }
+.room-card .join { align-self: flex-end; font-weight: bold; padding: 6px 18px; background: #ffd54f; border: 0; border-radius: 6px; color: #000; }
+.room-card .join:hover { background: #ffe57f; }
+.panel-dark { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 10px; padding: 16px; }
+.lobby .create { gap: 10px; }
+.felt .preset-info { background: rgba(255, 255, 255, 0.95); color: #222; }
+.felt label { color: #fff; }
+button.primary.big { padding: 10px 16px; font-size: 17px; font-weight: bold; background: #ffd54f; border-color: #c9a400; color: #000; }
+button.primary.big:hover { background: #ffe57f; }
+
+.waiting { display: flex; flex-direction: column; gap: 18px; }
+.waiting-banner { text-align: center; padding: 18px 10px 10px; }
+.waiting-tag { display: inline-block; background: #ffd54f; color: #000; font-weight: bold; padding: 3px 14px; border-radius: 14px; letter-spacing: 4px; }
+.waiting-title { font-size: 44px; margin: 8px 0 4px; color: #fff; text-shadow: 3px 3px 0 #000; }
+.waiting-sub { color: #dfd; font-size: 15px; }
+.waiting-main { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.seat-table { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; padding: 22px; border-radius: 120px; background: rgba(0, 0, 0, 0.22); border: 3px solid rgba(255, 213, 79, 0.6); min-width: min(760px, 100%); }
+.seat-card { width: 130px; background: rgba(0, 0, 0, 0.35); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 10px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.seat-card.human { border-color: #00e5ff; }
+.seat-card.me { box-shadow: 0 0 0 3px #ffd54f; }
+.seat-card.empty { border-style: dashed; opacity: 0.85; }
+.seat-card .seat-no { font-size: 12px; color: #ccc; width: auto; }
+.seat-avatar { width: 52px; height: 52px; border-radius: 50%; background: rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; font-size: 30px; }
+.seat-card .seat-name { font-weight: bold; font-size: 16px; text-align: center; flex: none; }
+.seat-card.empty .seat-name { color: #bbb; font-weight: normal; }
+.seat-actions { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.seat-actions button { font-size: 12px; padding: 2px 8px; }
+.spectators { color: #dfd; }
+.waiting .host-controls { width: min(560px, 100%); display: flex; flex-direction: column; gap: 10px; }
+.waiting .host-controls h3 { color: #ffd54f; }
+.wait-msg { text-align: center; font-size: 16px; color: #ffd54f; }
+.room-body.felt aside .chat { color: #222; }

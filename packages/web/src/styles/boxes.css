@@ -1,0 +1,146 @@
+/* 원작 상자(DSB): 배경을 50% 어둡게, 노란 제목, 흰 글자. 출마·정리·정산·일시정지 상자와 공약 상자 */
+.dsb { background: rgba(0, 0, 0, 0.5); color: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); text-shadow: 1px 1px 0 #000;
+  border: 1px solid; border-color: rgba(255, 255, 255, 0.6) rgba(0, 0, 0, 0.6) rgba(0, 0, 0, 0.6) rgba(255, 255, 255, 0.6); border-radius: 0; }
+.dsb-title { color: #ffff00; font-weight: bold; padding: 2px 8px; border-bottom: 0; }
+.dsb-body { padding: 6px 10px; }
+.dsb .icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #fff; color: #000; border-radius: 2px; font-size: 13px; margin-right: 2px; }
+.dsb .icon.red { color: #d40000; }
+.bid-bubble { font-size: 14px; white-space: nowrap; }
+.dsb-center { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); z-index: 6; max-width: 94%; }
+.dsb-inline { margin-bottom: 4px; }
+.dsb-low { top: 64%; }
+.dsb-inline button { margin: 0 2px; }
+.dsb-bid { position: absolute; left: 50%; bottom: calc(var(--ch) + 64px); transform: translateX(-50%); z-index: 6; }
+.players-6 .dsb-bid { left: 68%; }
+.dsb-bid .panel .row:first-child { margin-bottom: 12px; }
+.dsb .panel { background: transparent; color: #fff; padding: 0; }
+.dsb .panel > h3 { display: none; }
+.dsb .panel .hint { color: #cde; }
+.dsb .panel .error { color: #ffab91; }
+.dsb .panel .formula { text-align: center; font-size: 12px; color: #ccc; }
+.dsb .panel .plus { color: #9fe89f; } .dsb .panel .minus { color: #ff8a80; }
+
+/* 상자 안의 글자 버튼: 평소 흰색, 올리면 하늘색 */
+.dsb .text-buttons button, .dsb .suit-btn, .dsb .stepper button { background: none; border: 0; color: #fff; font-weight: bold; text-shadow: 1px 1px 0 #000; padding: 2px 8px; }
+.dsb .text-buttons button:hover:not(:disabled), .dsb .stepper button:hover:not(:disabled) { color: #00ffff; }
+.dsb .text-buttons button.on { color: #00ffff; text-decoration: underline; }
+.dsb .text-buttons button:disabled { color: #999; opacity: 1; }
+.dsb .text-buttons .dealmiss { color: #ffff00; }
+.dsb .text-buttons .confirm { font-size: 16px; }
+.suit-buttons { display: inline-flex; gap: 3px; }
+.dsb .suit-btn { position: relative; width: 30px; height: 30px; background: #fff; color: #000; text-shadow: none; border: 2px solid transparent; border-radius: 2px; font-size: 18px; padding: 0; }
+.dsb .suit-btn.red { color: #d40000; }
+.dsb .suit-btn:not([data-kiruda="1"]):not([data-kiruda="2"]):not([data-kiruda="3"]):not([data-kiruda="4"]) { width: 44px; font-size: 13px; }
+.dsb .suit-btn.on { border-color: #00ffff; box-shadow: 0 0 0 2px #00ffff; }
+.suit-btn .rec { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 2px; font-size: 10px; font-weight: bold; color: #ffff00; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+.stepper { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; }
+.goal-value { min-width: 28px; text-align: center; font-size: 20px; color: #fff; }
+.friend-select { display: flex; gap: 12px; align-items: flex-start; }
+.friend-options { flex: 1; }
+.friend-preview { width: calc(var(--cw) * 1.4); display: flex; justify-content: center; }
+.friend-preview .card { width: calc(var(--cw) * 1.4); height: calc(var(--ch) * 1.4); }
+.friend-word { font-size: 18px; font-weight: bold; color: #00ffff; padding-top: 20px; }
+/* 조커 선: 기루다 컴 강조 */
+.dsb .kiruda-come { background: #ffd54f; border-color: #c9a400; color: #000; font-weight: bold; text-shadow: none; }
+.kiruda-come-text { color: #ffd54f; }
+
+.board .bid-bubble { font-size: calc(10px + 4px * var(--s, 1)); }
+.board .dsb { font-size: calc(10px + 4px * var(--s, 1)); }
+.board .dsb .suit-btn { width: calc(20px + 10px * var(--s, 1)); height: calc(20px + 10px * var(--s, 1)); font-size: calc(12px + 6px * var(--s, 1)); }
+.board .goal-value { font-size: calc(12px + 8px * var(--s, 1)); }
+.board.portrait .bid-bubble { font-size: 12px; }
+.board.portrait .bid-bubble .dsb-title { display: none; }
+.board.portrait .bid-bubble .dsb-body { padding: 2px 6px; }
+.board.portrait .dsb-bid { left: 50%; width: 96%; bottom: calc(var(--ch) + 70px); }
+.board.portrait .dsb-center { width: 96%; max-height: 70%; overflow: auto; top: 44%; }
+.board.portrait .dsb .suit-btn { width: 28px; height: 28px; }
+.board.portrait .friend-select { flex-direction: column-reverse; align-items: center; }
+
+/* 공약 상자: 기루다를 가장 크게, 그 옆에 공약·주공, 프렌드는 다음 줄에서 '조건 → 누구' */
+.contract-box { position: absolute; top: 8px; left: 8px; z-index: 5; padding: 6px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 190px; }
+.players-6 .contract-box { left: auto; right: 8px; }
+.contract-main { display: flex; align-items: center; gap: 12px; }
+.contract-box .icon { width: 30px; height: 30px; font-size: 22px; }
+.contract-goal { font-size: 30px; font-weight: bold; line-height: 1; }
+.contract-master b { color: #00ffff; font-size: 16px; }
+.contract-friend { display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(255,255,255,.3); padding-top: 6px; }
+.contract-friend .label { color: #ffff00; font-weight: bold; }
+.contract-friend .mini-card .card { width: calc(var(--cw) * 0.62); height: calc(var(--ch) * 0.62); }
+.contract-friend .friend-name { font-size: 17px; font-weight: bold; }
+.board.portrait .contract-box { top: 31%; left: 50%; transform: translateX(-50%); flex-direction: row; flex-wrap: wrap; justify-content: center; min-width: 0; width: 94%; gap: 4px 10px; padding: 4px 8px; }
+.board.portrait .contract-goal { font-size: 22px; }
+.board.portrait .contract-box .icon { width: 22px; height: 22px; font-size: 16px; }
+.board.portrait .contract-friend .mini-card .card { width: calc(var(--cw) * 0.36); height: calc(var(--ch) * 0.36); }
+.board .contract-box { font-size: calc(10px + 4px * var(--s, 1)); gap: 8px; padding: 8px 12px 10px; }
+.board .contract-goal { font-size: calc(18px + 12px * var(--s, 1)); }
+.board .contract-master b, .board .contract-friend .friend-name { font-size: calc(11px + 5px * var(--s, 1)); }
+.board .contract-box .icon { width: calc(20px + 10px * var(--s, 1)); height: calc(20px + 10px * var(--s, 1)); font-size: calc(14px + 8px * var(--s, 1)); }
+.kiruda-tile { display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: calc(44px + 22px * var(--s, 1)); height: calc(44px + 22px * var(--s, 1));
+  background: #fff; color: #111; border-radius: 6px; border: 3px solid #ffff00;
+  font-size: calc(34px + 18px * var(--s, 1)); line-height: 1; text-shadow: none; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+.kiruda-tile.red { color: #d40000; }
+.kiruda-tile.nokiruda { font-size: calc(14px + 8px * var(--s, 1)); font-weight: bold; }
+.contract-text { display: flex; flex-direction: column; gap: 2px; }
+.board .kiruda-name { font-size: calc(16px + 9px * var(--s, 1)); font-weight: bold; color: #ffff00; line-height: 1.1; }
+.kiruda-name .small-label { font-size: 0.55em; color: #fff; vertical-align: middle; }
+.board .contract-sub { font-size: calc(11px + 4px * var(--s, 1)); }
+.board .contract-sub .contract-goal { font-size: 1.35em; color: #fff; }
+.board .contract-sub .contract-master { color: #00ffff; }
+.friend-who { font-weight: bold; padding: 1px 10px; border-radius: 12px; font-size: calc(12px + 6px * var(--s, 1)); }
+.friend-who.known { background: #00bcd4; color: #002; text-shadow: none; }
+.friend-who.unknown { background: rgba(255,255,255,.15); color: #fff; border: 1px dashed #fff; }
+.friend-who.none { background: #666; color: #fff; }
+.friend-who::before { content: '→ '; }
+.board.portrait .kiruda-tile { width: 40px; height: 40px; font-size: 30px; }
+.board.portrait .kiruda-name { font-size: 18px; }
+
+/* 정산 상자 */
+.dsb-result { width: min(620px, 94%); max-height: 92%; overflow: auto; }
+.dsb .panel.result { gap: 10px; align-items: stretch; }
+.result-banner { text-align: center; font-size: 34px; font-weight: bold; letter-spacing: 2px; padding: 4px 0; }
+.result-banner.def { color: #00ffff; }
+.result-banner.opp { color: #ffb74d; }
+.my-result { text-align: center; font-size: 22px; font-weight: bold; }
+.my-result.win { color: #9fff9f; }
+.my-result.lose { color: #ff8a80; }
+.my-result b { font-size: 26px; margin-left: 6px; }
+.score-line { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; }
+.score { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.score .label { font-size: 13px; color: #ddd; }
+.score b { font-size: 40px; line-height: 1.1; }
+.score.def b { color: #00ffff; }
+.score.opp b { color: #ffb74d; }
+.score.goal b { color: #ffff00; font-size: 32px; }
+.score .diff { font-size: 13px; color: #ffff00; }
+.score-bar { display: flex; gap: 2px; height: 16px; }
+.score-bar .cell { flex: 1; border-radius: 2px; position: relative; }
+.score-bar .cell.def { background: #00bcd4; }
+.score-bar .cell.opp { background: rgba(255, 183, 77, 0.55); }
+.score-bar .cell.goal::after { content: ''; position: absolute; right: -3px; top: -5px; bottom: -5px; width: 3px; background: #ffff00; }
+.teams { display: flex; gap: 10px; }
+.team { flex: 1; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.2); padding: 6px 8px; }
+.team.won { border-color: #ffff00; }
+.team-head { font-weight: bold; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.team-tag { font-size: 12px; padding: 0 6px; border-radius: 8px; background: #555; }
+.team.won .team-tag { background: #ffff00; color: #000; text-shadow: none; }
+.member { display: grid; grid-template-columns: 1fr auto auto auto; gap: 8px; align-items: center; padding: 2px 0; }
+.member.me { font-weight: bold; }
+.member .who { display: flex; align-items: center; gap: 4px; }
+.member .delta { font-size: 18px; font-weight: bold; min-width: 34px; text-align: right; }
+.member .delta.plus { color: #9fff9f; }
+.member .delta.minus { color: #ff8a80; }
+.member .total { color: #ddd; font-size: 13px; min-width: 28px; text-align: right; }
+.member .vote { font-size: 12px; color: #bbb; min-width: 28px; }
+.result-buttons { justify-content: center; }
+.board.portrait .result-banner { font-size: 26px; }
+.board.portrait .score b { font-size: 30px; }
+.board.portrait .teams { flex-direction: column; }
+
+/* 일시정지 */
+.pause-btn.on { background: #ffd54f; border-color: #c9a400; font-weight: bold; }
+.pause-overlay { position: absolute; inset: 0; z-index: 20; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; }
+.pause-box { font-size: calc(12px + 4px * var(--s, 1)); min-width: 300px; text-align: center; }
+.pause-box .dsb-title { font-size: 1.3em; }
+.pause-text { font-size: 1.2em; font-weight: bold; margin-bottom: 6px; }
+.pause-box .text-buttons { justify-content: center; margin-top: 8px; }
