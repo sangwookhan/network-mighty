@@ -4,6 +4,8 @@ import { createRoot } from 'react-dom/client';
 import { CardBack, CardFace } from './cardArt.js';
 import { DECKS } from './deck.js';
 
+// 이미지 디자인은 파일이 없으면 빈칸으로 보인다
+
 const sample = [makeCard(1, 1), makeCard(2, 7), makeCard(3, 10), makeCard(4, 3), makeCard(1, 11), makeCard(3, 12), makeCard(4, 13), JOKER];
 const all = Array.from({ length: 53 }, (_, i) => i + 1);
 createRoot(document.getElementById('root')!).render(

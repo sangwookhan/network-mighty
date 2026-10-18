@@ -7,3 +7,6 @@ re/decompiled/
 re/resources/
 re/mockups/
 re/screenshots/
+
+# 라이선스 확인 전인 카드 이미지 (로컬에서만 사용)
+packages/web/public/decks/stock/

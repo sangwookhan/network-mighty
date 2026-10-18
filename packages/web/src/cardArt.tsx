@@ -3,7 +3,7 @@
 
 import { JOKER, rankOf, suitOf, type Card } from '@mighty/engine';
 import type { ReactNode } from 'react';
-import { type DeckId, useDeck } from './deck.js';
+import { type DeckId, IMAGE_DECKS, useDeck } from './deck.js';
 
 export const CARD_W = 71;
 export const CARD_H = 96;
@@ -25,7 +25,10 @@ interface Theme {
   radius: number;
 }
 
-const THEMES: Record<DeckId, Theme> = {
+/** 직접 그리는 디자인 (이미지 디자인 'stock' 은 그림 파일을 쓴다) */
+type DrawnDeck = Exclude<DeckId, 'stock'>;
+
+const THEMES: Record<DrawnDeck, Theme> = {
   classic: {
     bg: '#fff', stroke: '#333', colors: ['', '#111', '#d40000', '#d40000', '#111'], corner: 12, pips: 'pips', font: 'Georgia, serif',
     court: { bg: '#fff6d5', j: '#1d4fa3', q: '#b8860b', k: '#8b1a1a', crown: '#e3b21b' }, joker: { bg: '#f6ecff', ink: '#6a1b9a' }, radius: 4,
@@ -152,7 +155,10 @@ function JokerFace({ t }: { t: Theme }) {
 
 export function CardFace({ card, deck }: { card: Card; deck?: DeckId }) {
   const chosen = useDeck();
-  const t = THEMES[deck ?? chosen];
+  const id = deck ?? chosen;
+  const dir = IMAGE_DECKS[id];
+  if (dir) return <img className="card-svg card-img" src={`${dir}/${card}.webp`} alt="" draggable={false} />;
+  const t = THEMES[id as DrawnDeck];
   const base = <rect x=".5" y=".5" width="70" height="95" rx={t.radius} fill={t.bg} stroke={t.stroke} />;
   if (card === JOKER) {
     return (
@@ -185,12 +191,12 @@ export function CardBack({ deck }: { deck?: DeckId } = {}) {
   const chosen = useDeck();
   return (
     <svg viewBox={`0 0 ${CARD_W} ${CARD_H}`} className="card-svg">
-      {BACKS[deck ?? chosen]}
+      {BACKS[(deck ?? chosen) === 'stock' ? 'classic' : ((deck ?? chosen) as DrawnDeck)]}
     </svg>
   );
 }
 
-const BACKS: Record<DeckId, ReactNode> = {
+const BACKS: Record<DrawnDeck, ReactNode> = {
   // 고전: 짙은 빨강 바탕에 금색 마름모 격자와 가운데 메달
   classic: (
     <>
