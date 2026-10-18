@@ -40,6 +40,10 @@
 .friend-preview { width: calc(var(--cw) * 1.4); display: flex; justify-content: center; }
 .friend-preview .card { width: calc(var(--cw) * 1.4); height: calc(var(--ch) * 1.4); }
 .friend-word { font-size: 18px; font-weight: bold; color: #00ffff; padding-top: 20px; }
+/* 주공 정리: 추천 버튼과 이유 */
+.advice-row { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; }
+.dsb .advice-row button { border: 1px solid #ffff00; color: #ffff00; }
+.advice { color: #00ffff; font-size: 0.9em; }
 /* 조커 선: 기루다 컴 강조 */
 .dsb .kiruda-come { background: #ffd54f; border-color: #c9a400; color: #000; font-weight: bold; text-shadow: none; }
 .kiruda-come-text { color: #ffd54f; }

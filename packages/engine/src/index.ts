@@ -7,3 +7,4 @@ export * from './election.js';
 export * from './friend.js';
 export * from './scoring.js';
 export * from './describe.js';
+export * from './advice.js';

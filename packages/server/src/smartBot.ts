@@ -5,7 +5,10 @@
 //  - 같은 편/상대 편을 따져 점수카드를 몰아주거나 아낀다.
 
 import {
+  HAND_PARAMS,
   JOKER,
+  adviseFinal,
+  estimateTricks,
   NO_SUIT,
   SUITS,
   canDeclareJokercall,
@@ -14,10 +17,8 @@ import {
   isKiruda,
   isPoint,
   isValidBid,
-  isValidFinalContract,
   jokercallOf,
   makeCard,
-  maxGoal,
   mightyOf,
   powerCompare,
   powerOf,
@@ -32,23 +33,16 @@ import {
 import type { FriendChoice, GameAction, Request } from '@mighty/protocol';
 import type { BotView as Game } from './botView.js';
 
-/** 조정용 상수 (봇끼리 대결로 맞춘다: scripts/bench.ts) */
-export const PARAMS = {
-  /** 프렌드가 보태 줄 것으로 기대하는 트릭 수 */
-  friendTricks: 1.6,
-  /** 바닥패 3장으로 기대하는 트릭 수 */
-  kittyTricks: 0.6,
-  /** 트릭 1개당 점수 */
-  pointsPerTrick: 2.0,
-  /** 공약 추정에서 빼는 안전 여유 */
-  bidMargin: -3,
+/**
+ * 조정용 상수 (봇끼리 대결로 맞춘다: scripts/bench.ts). 패 평가 상수는 엔진(HAND_PARAMS)과 같은 객체를 쓴다
+ * (주공 추천 화면과 봇이 같은 값을 쓰도록). bench 가 PARAMS 를 덮어쓰면 엔진 쪽도 함께 바뀐다.
+ */
+export const PARAMS = Object.assign(HAND_PARAMS, {
   /** 아직 낼 사람이 보탤 것으로 기대하는 점수 */
   laterPoints: 0.2,
   /** 카드를 아끼는 정도 */
   holdScale: 1.5,
-  /** 프렌드 없는 규칙(3마)에서 혼자 칠 때 더하는 트릭 수 */
-  soloBonus: 1.0,
-};
+});
 
 export function decideSmart(g: Game, seat: number, req: Request): GameAction {
   switch (req.kind) {
@@ -66,46 +60,6 @@ export function decideSmart(g: Game, seat: number, req: Request): GameAction {
 }
 
 // ================= 패 평가 =================
-
-/** 이 패를 이 기루다로 쳤을 때 내가 딸 트릭 수 어림 */
-export function estimateTricks(hand: readonly Card[], kiruda: Suit, rules: Rules): number {
-  const mighty = mightyOf(rules, kiruda);
-  let t = 0;
-  if (hand.includes(mighty)) t += 1;
-  if (hand.includes(JOKER)) t += 0.9;
-  const bySuit = (s: Suit) => hand.filter((c) => c !== mighty && c !== JOKER && suitOf(c) === s).sort((a, b) => powerOf(b) - powerOf(a));
-
-  if (kiruda !== NO_SUIT) {
-    const k = bySuit(kiruda);
-    // 위에서부터 이어지는 기루다는 확실한 트릭
-    let top = 13;
-    for (const c of k) {
-      if (powerOf(c) === top) (t += 1), top--;
-      else break;
-    }
-    const sure = 13 - top;
-    // 이어지지 않는 높은 기루다
-    for (const c of k.slice(sure)) if (powerOf(c) >= 11) t += 0.45;
-    // 긴 기루다는 상대 기루다가 떨어진 뒤 트릭이 된다
-    t += Math.max(0, k.length - 3 - Math.max(0, sure - 1)) * 0.85;
-  }
-  for (const s of SUITS) {
-    if (s === kiruda) continue;
-    const cs = bySuit(s);
-    if (cs.length === 0) {
-      // 무늬가 없으면 기루다로 잘라 먹을 수 있다
-      if (kiruda !== NO_SUIT && bySuit(kiruda).length >= 3) t += 0.35;
-      continue;
-    }
-    if (powerOf(cs[0]) === 13) {
-      t += 0.8;
-      if (cs[1] && powerOf(cs[1]) === 12) t += 0.5;
-    } else if (powerOf(cs[0]) === 12 && cs.length >= 2) t += 0.25;
-    // 노기루다는 긴 무늬가 그대로 트릭이 된다
-    if (kiruda === NO_SUIT && cs.length >= 5 && powerOf(cs[0]) >= 12) t += (cs.length - 4) * 0.6;
-  }
-  return t;
-}
 
 /** 이 패로 부를 만한 공약 (팀 전체 기대 점수) */
 export function targetGoal(hand: readonly Card[], kiruda: Suit, rules: Rules, withKitty: boolean): number {
@@ -178,69 +132,13 @@ function chooseKill(g: Game, seat: number, failed: readonly Card[]): Card {
 
 // ================= 주공: 버리기, 기루다 변경, 프렌드 =================
 
-function combos3<T>(xs: readonly T[]): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < xs.length; i++) for (let j = i + 1; j < xs.length; j++) for (let k = j + 1; k < xs.length; k++) out.push([xs[i], xs[j], xs[k]]);
-  return out;
-}
-
-/** 버릴 3장을 고른다: 남은 10장의 기대 점수 + 버린 점수카드(규칙에 따라 여당/야당 몫) */
-function bestDiscard(hand13: readonly Card[], kiruda: Suit, rules: Rules): { discards: Card[]; value: number } {
-  const mighty = mightyOf(rules, kiruda);
-  let best = { discards: hand13.slice(0, 3), value: -Infinity };
-  for (const d of combos3(hand13)) {
-    if (d.includes(mighty) || d.includes(JOKER)) continue;
-    const rest = hand13.filter((c) => !d.includes(c));
-    const pts = countPoints(d);
-    const value =
-      estimateTricks(rest, kiruda, rules) * PARAMS.pointsPerTrick + (rules.discardsToOpposition ? -pts : pts) * 0.8 - d.filter((c) => isKiruda(c, kiruda)).length * 0.5;
-    if (value > best.value) best = { discards: d, value };
-  }
-  return best;
-}
-
 function chooseFinal(g: Game, seat: number): GameAction {
-  const rules = g.rules;
-  const hand = g.myHand;
-  const elected = g.electedContract!;
-  const team = (rules.friendEnabled ? PARAMS.friendTricks : 0) * PARAMS.pointsPerTrick;
-
-  const options: { contract: Contract; discards: Card[]; slack: number }[] = [];
-  for (const k of [...SUITS, NO_SUIT] as Suit[]) {
-    const d = bestDiscard(hand, k, rules);
-    const expected = d.value + team - PARAMS.bidMargin;
-    // 이 기루다로 바꿀 때 가능한 가장 낮은 공약
-    let goal = k === elected.kiruda ? elected.goal : -1;
-    if (goal < 0) for (let gl = elected.goal; gl <= maxGoal(rules); gl++) if (isValidFinalContract(elected, { kiruda: k, goal: gl }, rules)) { goal = gl; break; }
-    if (goal < 0) continue;
-    // 바꾸는 건 확실히 나을 때만
-    const slack = expected - goal - (k === elected.kiruda ? 0 : 1.5) + (k === NO_SUIT ? 1 : 0);
-    options.push({ contract: { kiruda: k, goal }, discards: d.discards, slack });
-  }
-  options.sort((a, b) => b.slack - a.slack);
-
-  for (const o of options) {
-    for (const friend of friendCandidates(g, seat, o.contract.kiruda, o.discards)) {
-      const action: GameAction = { kind: 'final', discards: o.discards, contract: o.contract, friend };
-      if (g.validateFinal(action)) return action;
-    }
-  }
+  // 계산은 엔진의 주공 도우미(화면 '추천'과 같은 코드)
+  const a = adviseFinal(g.myHand, g.electedContract!, g.rules);
+  const friend: FriendChoice = a.friend.kind === 'player' ? { kind: 'player', seat: g.active[a.friend.seat] } : a.friend;
+  const action: GameAction = { kind: 'final', discards: a.discards, contract: a.contract, friend };
+  if (g.validateFinal(action)) return action;
   throw new Error('no valid final');
-}
-
-function friendCandidates(g: Game, seat: number, kiruda: Suit, discards: Card[]): FriendChoice[] {
-  const rules = g.rules;
-  const keep = g.myHand.filter((c) => !discards.includes(c));
-  const out: FriendChoice[] = [];
-  const add = (c: Card) => {
-    if (!keep.includes(c) && !discards.includes(c)) out.push({ kind: 'card', card: c });
-  };
-  add(mightyOf(rules, kiruda));
-  add(JOKER);
-  if (kiruda !== NO_SUIT) for (const r of [1, 13, 12]) add(makeCard(kiruda, r));
-  for (const s of SUITS) if (s !== kiruda) add(makeCard(s, 1));
-  out.push({ kind: 'firstTrick' }, { kind: 'none' });
-  return out;
 }
 
 // ================= 카드 내기 =================

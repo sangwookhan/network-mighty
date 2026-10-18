@@ -3,6 +3,8 @@
 // 아니면(봇 자리, 연결 끊김, 시간 초과) 봇의 결정을 받는다.
 
 import {
+  defaultDiscards,
+  defaultFriend,
   JOKER,
   NO_SUIT,
   applyBid,
@@ -286,8 +288,11 @@ export class Game {
     if (!p) return;
     let action: GameAction | null = null;
     try {
+      // 사람이 주공 정리 시간을 넘기면 화면에 처음 올려 둔 선택(엔진의 기본 선택) 그대로 진행한다:
+      // 봇처럼 기루다를 바꾸거나 공약을 올리지 않아 손해가 적다
+      if (p.req.kind === 'final' && this.host.isHumanControlled(seat)) action = this.defaultFinal(seat);
       // 봇은 사람과 같은 '그 좌석에서 보이는 정보'만 받는다 (남의 패를 볼 수 없음)
-      action = decideFor(this.host.botKind?.(seat) ?? 'smart', new BotView(this.rules, seat, this.view(seat)), seat, p.req);
+      else action = decideFor(this.host.botKind?.(seat) ?? 'smart', new BotView(this.rules, seat, this.view(seat)), seat, p.req);
       if (!p.validate(action)) {
         console.error(`[game] 봇이 규칙에 어긋난 수를 냄 (좌석 ${seat}):`, JSON.stringify(action));
         action = null;
@@ -304,6 +309,19 @@ export class Game {
       return;
     }
     this.complete(seat, action);
+  }
+
+  /** 주공 정리의 기본 선택: 당선 공약 그대로, 처음 올려 두는 버릴 카드와 프렌드 (화면과 같은 엔진 함수) */
+  private defaultFinal(seat: number): GameAction {
+    const hand = this.hands[seat];
+    const contract = this.electedContract!;
+    const friend = defaultFriend(hand, contract.kiruda, this.rules);
+    return {
+      kind: 'final',
+      discards: defaultDiscards(hand, contract.kiruda, this.rules),
+      contract: { kiruda: contract.kiruda, goal: contract.goal },
+      friend: friend.kind === 'player' ? { kind: 'player', seat: this.active[friend.seat] } : friend,
+    };
   }
 
   /** 규칙상 가능한 가장 단순한 수 (봇이 실패했을 때) */

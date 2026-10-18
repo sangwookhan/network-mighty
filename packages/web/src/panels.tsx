@@ -4,6 +4,8 @@ import {
   JOKER,
   NO_SUIT,
   SUITS,
+  adviseFinal,
+  defaultFriend,
   goalRange,
   isValidBid,
   isValidFinalContract,
@@ -140,20 +142,23 @@ export function KillPanel({ game }: { game: GameView }) {
   );
 }
 
-export function FinalPanel({ room, game, discards }: { room: RoomView; game: GameView; discards: Card[] }) {
+export function FinalPanel({ room, game, discards, setDiscards }: {
+  room: RoomView;
+  game: GameView;
+  discards: Card[];
+  setDiscards: (f: (d: Card[]) => Card[]) => void;
+}) {
   const rules = room.rules;
   const elected = game.electedContract!;
   const hand13 = game.myHand;
+  // 처음 프렌드는 엔진의 기본 선택 (시간 초과로 서버가 대신 진행할 때와 같다)
+  const [initialFriend] = useState(() => defaultFriend(hand13, elected.kiruda, rules));
   const [kiruda, setKiruda] = useState<Suit>(elected.kiruda);
   const [goal, setGoal] = useState(elected.goal);
-  const [friendKind, setFriendKind] = useState<FriendChoice['kind']>(rules.friendEnabled ? 'card' : 'none');
+  const [friendKind, setFriendKind] = useState<FriendChoice['kind']>(initialFriend.kind);
   const [friendSeat, setFriendSeat] = useState<number>(game.active.find((s) => s !== game.master) ?? 0);
-  const [friendCard, setFriendCard] = useState<Card>(() => {
-    const m = mightyOf(rules, elected.kiruda);
-    if (!hand13.includes(m)) return m;
-    if (!hand13.includes(JOKER)) return JOKER;
-    return elected.kiruda !== NO_SUIT ? makeCard(elected.kiruda, 1) : makeCard(1, 1);
-  });
+  const [friendCard, setFriendCard] = useState<Card>(initialFriend.kind === 'card' ? initialFriend.card : mightyOf(rules, elected.kiruda));
+  const [advice, setAdvice] = useState<string | null>(null);
 
   const masterHand = hand13.filter((c) => !discards.includes(c));
   const contract = { kiruda, goal };
@@ -192,11 +197,25 @@ export function FinalPanel({ room, game, discards }: { room: RoomView; game: Gam
     return isValidFriend(e, { rules, n: game.active.length, master: game.active.indexOf(game.master!), masterHand, discards });
   };
 
+  // 추천: 봇과 같은 계산(엔진 adviseFinal)으로 버릴 카드·기루다·공약·프렌드를 채운다
+  const applyAdvice = () => {
+    const a = adviseFinal(hand13, elected, rules);
+    setDiscards(() => a.discards);
+    setKiruda(a.contract.kiruda);
+    setGoal(a.contract.goal);
+    pick(a.friend.kind === 'player' ? { kind: 'player', seat: game.active[a.friend.seat] } : a.friend);
+    setAdvice(a.reason);
+  };
+
   return (
     <div className="panel" data-panel="final">
       <p>
         버릴 카드 3장을 아래 패에서 눌러 올리세요 <b>({discards.length}/3)</b>
         {discards.length > 0 && <span> {discards.map(shortName).join(' ')}</span>}
+        <span className="text-buttons advice-row">
+          <button onClick={applyAdvice} title="버릴 카드·기루다·공약·프렌드를 추천대로 채웁니다">추천</button>
+          {advice && <span className="advice">{advice}</span>}
+        </span>
       </p>
       <p>
         지금 기루다와 목표 점수를 바꿀 수 있습니다 <span className="hint">(당선: {contractText(elected.kiruda, elected.goal)})</span>

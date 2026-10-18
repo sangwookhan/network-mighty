@@ -2,9 +2,9 @@
 // 내 패는 아래에 앞면으로 펼치고, 다른 사람은 판 가장자리에 뒷면으로 둘러앉는다.
 // 공약·안내는 원작의 반투명 상자(DSB)처럼 판 위에 띄운다.
 
-import { NO_SUIT, isValidBid, type Card, type Suit } from '@mighty/engine';
+import { NO_SUIT, defaultDiscards, isValidBid, type Card, type Suit } from '@mighty/engine';
 import type { GameView, RoomView } from '@mighty/protocol';
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
 import { send } from '../net.js';
 import { BidPanel, FinalPanel, KillPanel, ResultPanel, recommendKiruda } from '../panels.js';
 import { Center } from './Center.js';
@@ -34,9 +34,16 @@ export function Board({ room, game }: { room: RoomView; game: GameView }) {
   const sideOf = new Map<number, Side | MySide>(others.map((s, k) => [s, SIDES[n - 1][k]]));
   sideOf.set(base, n === 6 ? 'bottom-right' : 'bottom');
   const req = game.myRequest;
-  // 주공이 버릴 카드 (아래 내 패에서 눌러 고른다)
-  const [discards, setDiscards] = useState<Card[]>([]);
-  useEffect(() => setDiscards([]), [game.myRequestId]);
+  // 주공이 버릴 카드 (아래 내 패에서 눌러 고른다). 정리 차례가 오면 엔진의 기본 선택을 미리 올려 둔다
+  // (시간이 지나 서버가 대신 진행할 때도 같은 기본 선택을 쓴다)
+  const [picked, setPicked] = useState<{ id: number | null; cards: Card[] }>({ id: null, cards: [] });
+  const discards =
+    picked.id === game.myRequestId
+      ? picked.cards
+      : req?.kind === 'final' && game.electedContract
+        ? defaultDiscards(game.myHand, game.electedContract.kiruda, room.rules)
+        : [];
+  const setDiscards = (f: (d: Card[]) => Card[]) => setPicked({ id: game.myRequestId, cards: f(discards) });
   // 공약할 기루다: 판마다 내 패에 맞는 무늬를 추천하고, 고른 것은 그 판 동안 유지한다
   const recommended = recommendKiruda(game.myHand, room.rules);
   const [bidKiruda, setBidKiruda] = useState<{ deal: number; kiruda: Suit } | null>(null);
@@ -58,7 +65,7 @@ export function Board({ room, game }: { room: RoomView; game: GameView }) {
       {game.contract && game.master !== null && <ContractBox room={room} game={game} />}
       {req?.kind === 'bid' && <Dsb title="공약을 정해 주세요" className="dsb-bid"><BidPanel room={room} game={game} kiruda={kirudaChoice} setKiruda={(k) => setBidKiruda({ deal: game.dealNo, kiruda: k })} recommended={recommended} /></Dsb>}
       {req?.kind === 'kill' && <Dsb title="탈락 지목" className="dsb-center dsb-low"><KillPanel game={game} /></Dsb>}
-      {req?.kind === 'final' && <Dsb title="당선을 축하드립니다 !!" className="dsb-center"><FinalPanel room={room} game={game} discards={discards} /></Dsb>}
+      {req?.kind === 'final' && <Dsb title="당선을 축하드립니다 !!" className="dsb-center"><FinalPanel room={room} game={game} discards={discards} setDiscards={setDiscards} /></Dsb>}
       {game.phase === 'result' && game.result && <Dsb className="dsb-center dsb-result"><ResultPanel room={room} game={game} /></Dsb>}
       {me !== null && (
         <MyHand room={room} game={game} kiruda={kiruda} boardWidth={w} cw={cw} portrait={portrait} discards={req?.kind === 'final' ? discards : null} setDiscards={setDiscards} />
