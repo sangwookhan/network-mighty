@@ -4,7 +4,7 @@
 
 import { JOKER, NO_SUIT, isKiruda, isValidBid, jokercallOf, mightyOf, plainCardName, suitOf, type Bid, type Card, type Suit } from '@mighty/engine';
 import type { GameView, RoomView, SeatView } from '@mighty/protocol';
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { CardBackView, CardView, SUIT_NAME, SUIT_SYMBOL, contractText, shortName, sortHand } from './cards.js';
 import { act, send } from './net.js';
 import { BidPanel, FinalPanel, KillPanel, ResultPanel, recommendKiruda } from './panels.js';
@@ -256,7 +256,7 @@ function NameTag({ room, game, seat }: { room: RoomView; game: GameView; seat: S
       </span>
       {seatBadges(game, seat.seat)}
       <span className="money">{seat.money}</span>
-      {waiting?.deadline && <Countdown deadline={waiting.deadline} />}
+      {waiting?.remainingMs != null && <Countdown remainingMs={waiting.remainingMs} />}
     </div>
   );
 }
@@ -481,7 +481,7 @@ function StatusBar({ room, game }: { room: RoomView; game: GameView }) {
         <FriendText room={room} game={game} />
       </span>
       <span className="status-text">{text}</span>
-      {w?.deadline && <Countdown deadline={w.deadline} />}
+      {w?.remainingMs != null && <Countdown remainingMs={w.remainingMs} />}
       {room.paused && <span className="paused-tag">일시정지</span>}
       {room.me.seat === null && <span className="spectating">관전 중</span>}
       <span className="spacer" />
@@ -508,7 +508,10 @@ function FriendText({ room, game }: { room: RoomView; game: GameView }) {
   return <>{t} 프렌드</>;
 }
 
-export function Countdown({ deadline }: { deadline: number }) {
+/** 남은 시간: 서버가 보낸 남은 밀리초를 받은 시점부터 이 기기 시계로 센다 (서버와 시계가 달라도 맞음) */
+export function Countdown({ remainingMs }: { remainingMs: number }) {
+  // 새 값을 받을 때마다 이 기기 기준 마감 시각을 다시 잡는다
+  const deadline = useMemo(() => Date.now() + remainingMs, [remainingMs]);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 250);

@@ -220,7 +220,12 @@ export class Game {
   }
 
   waitingFor(): GameView['waitingFor'] {
-    return [...this.pending.entries()].map(([seat, p]) => ({ seat, kind: p.req.kind, deadline: p.deadline }));
+    const now = Date.now();
+    return [...this.pending.entries()].map(([seat, p]) => ({
+      seat,
+      kind: p.req.kind,
+      remainingMs: p.deadline === null ? null : Math.max(0, p.deadline - now),
+    }));
   }
 
   private ask(seat: number, req: Request, validate: (a: GameAction) => boolean): Promise<GameAction> {

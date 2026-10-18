@@ -216,7 +216,7 @@ describe('통합: 사람 3명 + 봇', () => {
     const before = snapshot();
     await new Promise((r) => setTimeout(r, 200));
     expect(snapshot()).toBe(before);
-    expect(a.room!.game!.waitingFor.every((w) => w.deadline === null)).toBe(true);
+    expect(a.room!.game!.waitingFor.every((w) => w.remainingMs === null)).toBe(true);
     // 다시 시작하면 판이 끝까지 간다
     c.send({ t: 'pause', paused: false });
     await until(() => a.room?.paused === null && a.dealsFinished.size >= 1, 20_000);
@@ -293,6 +293,20 @@ describe('통합: 사람 3명 + 봇', () => {
     expect(JSON.stringify(hub.rooms.get(roomId)!.seats)).toBe(before);
     expect(Object.getPrototypeOf(hub.rooms.get(roomId)!.seats)).toBe(Array.prototype);
     hub.closeRoom(hub.rooms.get(roomId)!);
+  });
+
+  it('차례 제한 시간은 남은 밀리초로 보낸다', async () => {
+    const { hub, a, b } = await setup(1);
+    a.autoPlay = b.autoPlay = false;
+    a.send({ t: 'setRoom', turnSeconds: 30 });
+    await until(() => a.room?.turnSeconds === 30);
+    a.send({ t: 'start' });
+    await until(() => !!a.room?.game?.waitingFor.length);
+    const w = a.room!.game!.waitingFor[0];
+    // 사람 좌석이면 30초 이하의 남은 시간, 봇 좌석이면 null
+    if (w.remainingMs !== null) expect(w.remainingMs).toBeGreaterThan(25_000), expect(w.remainingMs).toBeLessThanOrEqual(30_000);
+    expect(JSON.stringify(a.room)).not.toContain('deadline');
+    hub.closeRoom(hub.rooms.get(a.room!.id)!);
   });
 
   it('사람이 모두 나가면 방이 닫힌다', async () => {

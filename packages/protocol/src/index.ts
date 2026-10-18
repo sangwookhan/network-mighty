@@ -136,7 +136,11 @@ export interface GameView {
   lastTrick: { cards: PlayedCard[]; winner: number } | null;
   /** 좌석별로 딴 점수카드 */
   taken: Card[][];
-  waitingFor: { seat: number; kind: Request['kind']; deadline: number | null }[];
+  /**
+   * 기다리는 요청. remainingMs: 이 메시지를 만든 순간 남은 시간(밀리초). 제한 없음·일시정지면 null.
+   * 서버와 기기의 시계가 달라도 맞도록, 받는 쪽은 받은 시점부터 센다.
+   */
+  waitingFor: { seat: number; kind: Request['kind']; remainingMs: number | null }[];
   myRequest: Request | null;
   myRequestId: number | null;
   result: {
