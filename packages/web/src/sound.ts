@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-export type SoundName = 'shuffle' | 'deal' | 'play' | 'collect' | 'turn' | 'elected' | 'win' | 'lose' | 'special' | 'cut' | 'join';
+export type SoundName = 'shuffle' | 'deal' | 'play' | 'collect' | 'turn' | 'elected' | 'win' | 'lose' | 'special' | 'cut' | 'join' | 'leave';
 
 const KEY = 'mighty.sound';
 let enabled = localStorage.getItem(KEY) !== 'off';
@@ -125,6 +125,10 @@ export function play(name: SoundName) {
     case 'join': // 누가 들어옴: 딩동 초인종
       tone(a, 988, 0, 0.45, 'sine', 0.16);
       tone(a, 784, 0.28, 0.6, 'sine', 0.16);
+      break;
+    case 'leave': // 누가 나감: 내려가는 동동
+      tone(a, 784, 0, 0.35, 'sine', 0.16);
+      tone(a, 523, 0.25, 0.5, 'sine', 0.16);
       break;
     case 'cut': // 간·오버간: 탁 치는 소리
       swish(a, 0, 0.1, 0.4, 600);

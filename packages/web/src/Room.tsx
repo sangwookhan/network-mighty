@@ -174,9 +174,10 @@ function useRoomNewsVoice(room: RoomView) {
     for (const l of fresh) {
       const v = l.from === null ? voiceForSystemLine(l.text, myName) : null;
       if (!v) continue;
-      // 누가 들어온 것은 게임 중에도 꼭 들리게: 초인종 소리 + 다른 말보다 먼저, 크게
-      if (/입장했습니다$/.test(v.text)) {
-        sfx('join');
+      // 누가 들어오고 나간 것은 게임 중에도 꼭 들리게: 알림 소리 + 다른 말보다 먼저, 크게
+      const entered = /입장했습니다$/.test(v.text);
+      if (entered || /나갔습니다$|퇴장했습니다$|내보냈습니다$|대신 게임에 참여합니다$/.test(v.text)) {
+        sfx(entered || v.text.endsWith('참여합니다') ? 'join' : 'leave');
         const text = v.text;
         setTimeout(() => speak('room', text, { urgent: true, volume: 0.9 }), 650); // 딩동 뒤에 말
       } else speak(v.kind, v.text);

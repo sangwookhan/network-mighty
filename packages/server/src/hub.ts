@@ -473,9 +473,10 @@ export class Room implements GameHost {
     if (this.seatOf(user.id) !== null) return '이미 앉아 있습니다';
     if (s.occupant === 'human') return '다른 사람이 앉은 자리입니다';
     if (this.status === 'playing' && s.occupant !== 'bot') return '봇 자리만 넘겨받을 수 있습니다';
+    const before = this.seatName(seat); // 게임 중이면 봇 이름 (예: 두환)
     this.spectators.delete(user.id);
     this.seatHuman(seat, user);
-    this.systemChat(this.status === 'playing' ? `${user.nickname}님이 ${seat + 1}번 자리를 넘겨받았습니다` : `${user.nickname}님이 ${seat + 1}번 자리에 앉았습니다`);
+    this.systemChat(this.status === 'playing' ? `${user.nickname}님이 ${before}님 대신 게임에 참여합니다` : `${user.nickname}님이 ${seat + 1}번 자리에 앉았습니다`);
     this.game?.occupantChanged(seat);
     this.changed();
     this.hub.broadcastLobby();
