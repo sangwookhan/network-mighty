@@ -23,6 +23,80 @@ npm start          # 운영 모드: 웹 빌드 후 서버 실행 (PORT 환경변
 - **혼자 3인 시험:** `http://localhost:3000/dev.html` 은 플레이어 3명(`?p=1`, `?p=2`, `?p=3`)의 화면을 나란히 띄운다.
   `?p=이름` 을 붙이면 같은 브라우저에서도 다른 사람으로 접속한다.
 
+## 집 PC에서 서버 열기 (macOS / Linux)
+
+집 PC 한 대에서 서버를 켜 두고, 같은 공유기(와이파이)에 연결된 폰·노트북으로 접속한다.
+방과 게임 상태는 메모리에만 있으므로 서버를 끄거나 다시 시작하면 진행 중인 방은 사라진다.
+
+### 1. 준비
+
+- Node.js 22 이상, git
+  - macOS: `brew install node git` (또는 nodejs.org 의 LTS 설치 파일)
+  - Linux(Ubuntu/Debian): NodeSource 등으로 Node 22 설치 후 `sudo apt install git`
+
+```bash
+git clone <저장소 주소> web-mighty   # 또는 폴더째 복사
+cd web-mighty
+npm install
+```
+
+### 2. 서버 켜기
+
+```bash
+npm start                  # 웹 화면을 빌드하고 3000번 포트로 서버 실행
+PORT=8080 npm start        # 다른 포트를 쓰려면
+```
+
+터미널에 `마이티 서버: http://localhost:3000 (운영 모드)` 가 나오면 준비 완료.
+
+PC가 잠들면 접속이 끊기므로, 오래 켜 둘 때는:
+
+```bash
+caffeinate -i npm start    # macOS: 서버가 켜져 있는 동안 잠자기 방지
+```
+
+터미널을 닫아도 계속 돌게 하려면 `tmux` 또는 `screen` 안에서 실행한다 (Linux 는 systemd 서비스로 등록해도 된다).
+
+### 3. 같은 와이파이에서 접속
+
+PC의 내부 IP를 확인한다.
+
+```bash
+ipconfig getifaddr en0     # macOS (유선이면 en1 등)
+hostname -I                # Linux
+```
+
+다른 기기의 브라우저에서 `http://<내부IP>:3000` 으로 접속한다 (예: `http://192.168.0.10:3000`).
+
+접속이 안 되면 방화벽을 확인한다.
+
+- macOS: 처음 실행할 때 "node 의 수신 연결 허용" 을 묻으면 **허용**. 놓쳤다면 시스템 설정 → 네트워크 → 방화벽 → 옵션에서 node 를 허용.
+- Linux(ufw): `sudo ufw allow 3000/tcp`
+
+### 4. 집 밖의 친구도 접속하게 하기 (선택)
+
+**Cloudflare Tunnel (권장):** 공유기 설정 없이 https 주소가 생긴다. 계정 없이 임시 주소로 쓸 수 있다.
+
+```bash
+brew install cloudflared                        # macOS (Linux 는 Cloudflare 배포 패키지 설치)
+cloudflared tunnel --url http://localhost:3000  # 출력되는 https://….trycloudflare.com 주소를 친구에게 공유
+```
+
+임시 주소는 cloudflared 를 다시 실행할 때마다 바뀐다. 고정 주소가 필요하면 Cloudflare 계정과 도메인으로 이름 있는 터널을 만든다.
+
+**공유기 포트 포워딩:** 공유기에서 외부 포트 3000 을 PC의 내부 IP:3000 으로 연결하고 `http://<공인IP>:3000` 으로 접속한다.
+https 가 아니고 집 IP가 드러나므로 아는 사람끼리 잠깐 쓸 때만 권한다.
+
+로그인 없이 닉네임만으로 들어오는 구조라, 주소를 아는 사람은 누구나 들어올 수 있다. 주소는 아는 사람끼리만 공유한다.
+
+### 5. 업데이트
+
+```bash
+git pull
+npm install
+npm start                  # 서버를 껐다가 다시 켠다 (진행 중인 방은 사라지므로 아무도 안 칠 때)
+```
+
 ## 테스트
 
 ```bash
