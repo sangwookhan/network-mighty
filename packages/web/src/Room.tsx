@@ -13,7 +13,13 @@ export function RoomScreen({ room }: { room: RoomView }) {
       <header className="menu-bar">
         <b>{room.name}</b>
         <span>
-          {room.preset.name} · 차례 {TURN_CHOICES.find(([s]) => s === room.turnSeconds)?.[1]}
+          {room.preset.name} · 차례{' '}
+          {/* 방장은 게임 중에도 차례 제한 시간을 바꿀 수 있다 */}
+          {room.me.isHost ? (
+            <TurnSelect value={room.turnSeconds} onChange={(turnSeconds) => send({ t: 'setRoom', turnSeconds })} />
+          ) : (
+            TURN_CHOICES.find(([s]) => s === room.turnSeconds)?.[1]
+          )}
         </span>
         <span className="spacer" />
         {playing && (room.me.seat !== null || room.me.isHost) && (

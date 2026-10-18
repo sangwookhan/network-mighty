@@ -203,6 +203,21 @@ export class Game {
     this.host.changed();
   }
 
+  /** 방장이 게임 중에 차례 제한 시간을 바꿨다: 기다리는 차례는 새 제한 시간으로 지금부터 다시 센다 */
+  turnLimitChanged(): void {
+    for (const [seat, p] of this.pending) {
+      if (!this.host.isHumanControlled(seat)) continue;
+      if (this.paused) {
+        if (this.host.turnSeconds > 0) this.remaining.set(seat, turnLimitMs(this.host.turnSeconds, p.req.kind));
+        else this.remaining.delete(seat);
+      } else {
+        p.deadline = null;
+        this.schedule(seat, false);
+      }
+    }
+    this.host.changed();
+  }
+
   /** 사람이 보낸 행동. 실패하면 오류 문구를 돌려준다. 이미 처리된 요청에 대한 응답은 조용히 무시한다 */
   handleAction(seat: number, requestId: number, action: GameAction): string | null {
     const p = this.pending.get(seat);

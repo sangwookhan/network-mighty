@@ -6,6 +6,7 @@ vi.setConfig({ testTimeout: 30_000 });
 import { NO_SUIT, SUITS, goalRange, isValidBid, type Bid } from '@mighty/engine';
 import { PROTOCOL_VERSION, applyRoomMessage, emptyRoomCache, type ClientMessage, type GameAction, type RoomView, type ServerMessage } from '@mighty/protocol';
 import { BOTS } from '../src/bots.js';
+import { turnLimitMs } from '../src/game.js';
 import { Hub } from '../src/hub.js';
 
 const FAST = { botDelayMs: 1, trickPauseMs: 1, redealPauseMs: 1 };
@@ -312,6 +313,40 @@ describe('통합: 사람 3명 + 봇', () => {
     // 사람 좌석이면 30초 이하의 남은 시간, 봇 좌석이면 null
     if (w.remainingMs !== null) expect(w.remainingMs).toBeGreaterThan(25_000), expect(w.remainingMs).toBeLessThanOrEqual(30_000);
     expect(JSON.stringify(a.room)).not.toContain('deadline');
+    hub.closeRoom(hub.rooms.get(a.room!.id)!);
+  });
+
+  it('주공 정리는 제한 시간의 4배, 방장은 게임 중에도 제한 시간을 바꿀 수 있다', async () => {
+    expect(turnLimitMs(30, 'final')).toBe(120_000);
+    expect(turnLimitMs(30, 'play')).toBe(30_000);
+    expect(turnLimitMs(0, 'final')).toBe(0);
+
+    const { hub, a, b } = await setup(1);
+    a.autoPlay = b.autoPlay = false;
+    a.send({ t: 'setRoom', turnSeconds: 30 });
+    await until(() => a.room?.turnSeconds === 30);
+    a.send({ t: 'start' });
+    const human = () => a.room?.game?.waitingFor.find((w) => w.remainingMs !== null);
+    await until(() => !!human());
+    expect(human()!.remainingMs).toBeLessThanOrEqual(30_000);
+
+    // 기다리는 차례는 새 제한 시간으로 다시 센다
+    a.send({ t: 'setRoom', turnSeconds: 90 });
+    await until(() => a.room?.turnSeconds === 90);
+    expect(human()!.remainingMs).toBeGreaterThan(85_000);
+    a.send({ t: 'setRoom', turnSeconds: 0 });
+    await until(() => a.room?.turnSeconds === 0);
+    expect(a.room!.game!.waitingFor.every((w) => w.remainingMs === null)).toBe(true);
+    await until(() => a.room!.chat.some((l) => l.text.includes('제한 없음으로')));
+
+    // 규칙은 게임 중에 바꿀 수 없고, 방장이 아니면 시간도 못 바꾼다
+    const before = a.errors.length;
+    a.send({ t: 'setRoom', presetId: 2 });
+    await until(() => a.errors.length > before);
+    expect(a.errors.at(-1)).toContain('규칙');
+    b.send({ t: 'setRoom', turnSeconds: 30 });
+    await until(() => b.errors.length > 0);
+    expect(b.errors.at(-1)).toContain('방장');
     hub.closeRoom(hub.rooms.get(a.room!.id)!);
   });
 

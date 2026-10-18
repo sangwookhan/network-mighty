@@ -358,15 +358,25 @@ export class Room implements GameHost {
       }
       case 'setRoom': {
         if (!isHost) return '방장만 할 수 있습니다';
-        if (this.status !== 'waiting') return '게임 중에는 바꿀 수 없습니다';
-        if (msg.presetId !== undefined) {
+        // 게임 중에는 차례 제한 시간만 바꿀 수 있다 (규칙은 판이 끝난 뒤 대기실에서)
+        if (this.status !== 'waiting' && msg.presetId !== undefined && msg.presetId !== this.presetId) return '게임 중에는 규칙을 바꿀 수 없습니다';
+        if (msg.presetId !== undefined && msg.presetId !== this.presetId) {
           if (!PRESETS.some((p) => p.id === msg.presetId)) return '알 수 없는 규칙입니다';
           this.presetId = msg.presetId;
           this.rules = presetRules(msg.presetId);
           this.resizeSeats();
           for (const u of this.humans()) this.sendStatic(u);
         }
-        if (msg.turnSeconds !== undefined) this.turnSeconds = normalizeTurnSeconds(msg.turnSeconds);
+        if (msg.turnSeconds !== undefined) {
+          const t = normalizeTurnSeconds(msg.turnSeconds);
+          if (t !== this.turnSeconds) {
+            this.turnSeconds = t;
+            if (this.game) {
+              this.game.turnLimitChanged();
+              this.systemChat(`방장이 차례 제한 시간을 ${t === 0 ? '제한 없음으로' : `${t}초로`} 바꿨습니다`);
+            }
+          }
+        }
         this.changed();
         this.hub.broadcastLobby();
         return null;
