@@ -17,5 +17,5 @@
 @keyframes fresh-pulse { to { box-shadow: 0 0 0 2px #fff59d, 0 0 20px 6px rgba(255, 213, 79, 0.95); } }
 .fresh-note { color: #ffd54f; font-weight: bold; }
 
-.status-bar .sound-toggle { font-size: 12px; padding: 0 6px; height: 18px; line-height: 16px; cursor: pointer; }
-.status-bar .sound-toggle.off { color: #777; }
+.status-bar .sound-toggle { font-size: 12px; padding: 0 6px; height: 18px; line-height: 16px; cursor: pointer; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border-color: rgba(255, 255, 255, 0.25); }
+.status-bar .sound-toggle.off { color: #889a8f; }

@@ -1,10 +1,23 @@
 /* 게임판: 좌석 배치(원작 배치 참고, re/04_screen_layout.md), 가운데 트릭, 내 패, 상태 표시줄, 떠 있는 창 */
 .room { height: 100vh; display: flex; flex-direction: column; }
 .room .room-body { flex: 1; overflow: auto; }
-.menu-bar { background: #ece9d8; color: #000; padding: 3px 8px; border-bottom: 1px solid #aaa; gap: 8px; font-size: 13px; }
-.menu-bar button { padding: 1px 8px; font-size: 12px; }
+.menu-bar { background: linear-gradient(#22352b, #17251e); color: #e8efe9; padding: 3px 8px; border-bottom: 1px solid #000; gap: 8px; font-size: 13px; }
+.menu-bar button { padding: 1px 10px; font-size: 12px; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border-color: rgba(255, 255, 255, 0.25); }
+.menu-bar button:hover { background: rgba(255, 255, 255, 0.16); }
+.menu-bar select { background: #0f1a14; color: #e8efe9; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 4px; }
 .room-play { position: relative; flex: 1; min-height: 0; }
-.board { position: absolute; inset: 0; overflow: hidden; color: #fff; background: #008000; }
+.board { position: absolute; inset: 0; overflow: hidden; color: #fff;
+  /* 카드 테이블: 가운데를 비추는 조명 + 펠트 결 + 짙은 초록, 가장자리는 나무 테두리 */
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 42%, rgba(255, 255, 255, 0.13), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 50% 45%, #13874a 0%, #0b6b37 50%, #064524 100%);
+  background-size: auto, 160px 160px, auto;
+  box-shadow: inset 0 0 0 5px #3b2412, inset 0 0 0 6px #c79a5b, inset 0 0 0 9px #2a170a, inset 0 0 70px 10px rgba(0, 0, 0, 0.55); }
+/* 펠트에 찍힌 타원 선 (판 장식, 누를 수 없음) */
+.board::before { content: ''; position: absolute; left: 9%; right: 9%; top: 14%; bottom: 20%; border-radius: 50%;
+  border: 2px solid rgba(255, 236, 170, 0.16); box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.06), inset 0 0 40px rgba(0, 0, 0, 0.12); pointer-events: none; }
+.board.portrait::before { left: 4%; right: 4%; top: 24%; bottom: 30%; }
 .board .card.small { width: calc(var(--cw) * 0.72); height: calc(var(--ch) * 0.72); }
 .board .card { width: var(--cw); height: var(--ch); }
 
@@ -72,21 +85,22 @@
 .my-discards { font-size: 12px; opacity: 0.8; }
 
 /* 원작 상태 표시줄: 기루다 | 공약 | 프렌드 | 메시지 */
-.status-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 24px; background: #ece9d8; color: #000; display: flex; align-items: center; gap: 10px; padding: 0 8px; font-size: 13px; border-top: 1px solid #999; z-index: 7; white-space: nowrap; overflow: hidden; }
+.status-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 24px; background: linear-gradient(#1d2d24, #111b16); color: #e8efe9; display: flex; align-items: center; gap: 10px; padding: 0 8px; font-size: 13px; border-top: 1px solid #000; z-index: 7; white-space: nowrap; overflow: hidden; }
 .status-bar .spacer { flex: 1; }
-.status-bar .countdown { color: #b00; }
-.status-bar .spectating { color: #555; }
-.status-bar .pane { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 18px; padding: 0 4px; border: 1px solid; border-color: #888 #fff #fff #888; background: #ece9d8; }
+.status-bar .countdown { color: #ff8a80; }
+.status-bar .spectating { color: #9fb3a6; }
+.status-bar .pane { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 18px; padding: 0 4px; border: 1px solid; border-color: rgba(0, 0, 0, 0.6) rgba(255, 255, 255, 0.15) rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.6); background: rgba(0, 0, 0, 0.3); border-radius: 3px; }
 .status-bar .icon-pane .icon { background: none; width: auto; height: auto; margin: 0; }
-.status-bar .icon-pane .icon.red { color: #d40000; }
-.status-bar .none { color: #d40000; font-weight: bold; }
+.status-bar .icon-pane .icon { color: #fff; }
+.status-bar .icon-pane .icon.red { color: #ff6b6b; }
+.status-bar .none { color: #ff6b6b; font-weight: bold; }
 .status-bar .friend-pane { min-width: 90px; }
-.status-bar .paused-tag { color: #b00; font-weight: bold; }
+.status-bar .paused-tag { color: #ffd54f; font-weight: bold; }
 
 /* 떠 있는 창: 점수, 채팅 */
-.float-window { position: absolute; background: #ece9d8; color: #000; border: 1px solid #777; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4); font-size: 12px; z-index: 8; }
-.float-title { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(#3a6fd8, #2456c4); color: #fff; padding: 1px 4px 1px 8px; font-weight: bold; }
-.float-title button { padding: 0 5px; font-size: 11px; line-height: 14px; }
+.float-window { position: absolute; background: #f4f1e8; color: #000; border: 1px solid #000; border-radius: 6px; overflow: hidden; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4); font-size: 12px; z-index: 8; }
+.float-title { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(#22352b, #17251e); color: #ffd54f; padding: 2px 4px 2px 8px; font-weight: bold; }
+.float-title button { padding: 0 5px; font-size: 11px; line-height: 14px; background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.3); }
 .score-window { top: 6px; left: 50%; transform: translateX(-50%); min-width: 170px; }
 .score-window table { width: 100%; border-collapse: collapse; }
 .score-window th { font-weight: normal; color: #444; padding: 2px 6px; }
@@ -98,7 +112,7 @@
 .chat-window .chat { flex: 1; min-height: 0; height: auto; border: 0; border-radius: 0; }
 /* 크기 손잡이: 아래에 붙은 창은 오른쪽 위, 위에 붙은 창(6마)은 오른쪽 아래 */
 .resize-grip { position: absolute; right: -1px; width: 16px; height: 16px; z-index: 1; touch-action: none; }
-.resize-grip.top { top: -1px; cursor: nesw-resize; background: linear-gradient(225deg, #fff 0 3px, #2456c4 3px 5px, transparent 5px 7px, #2456c4 7px 9px, transparent 9px); }
+.resize-grip.top { top: -1px; cursor: nesw-resize; background: linear-gradient(225deg, #fff 0 3px, #ffd54f 3px 5px, transparent 5px 7px, #ffd54f 7px 9px, transparent 9px); }
 .resize-grip.bottom { bottom: -1px; cursor: nwse-resize; background: linear-gradient(315deg, #777 0 2px, transparent 2px 4px, #777 4px 6px, transparent 6px 8px, #777 8px 10px, transparent 10px); }
 .chat-window .float-title { padding-right: 18px; }
 
