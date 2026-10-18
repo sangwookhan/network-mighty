@@ -7,12 +7,12 @@ import { speak } from '../voice.js';
 
 export function useGameVoice(room: RoomView, game: GameView) {
   const me = room.me.seat;
-  const prev = useRef<{ deal: number; log: number; trickDone: string | null; req: number | null } | null>(null);
+  const prev = useRef<{ deal: number; log: number; trickDone: string | null; req: number | null; result: boolean } | null>(null);
   const complete = game.phase === 'play' && !!game.lastTrick && !!game.trick && game.trick.cards.length === game.active.length;
 
   useEffect(() => {
     const log = game.election?.log ?? [];
-    const now = { deal: game.dealNo, log: log.length, trickDone: complete ? `${game.dealNo}:${game.turn}` : null, req: game.myRequestId };
+    const now = { deal: game.dealNo, log: log.length, trickDone: complete ? `${game.dealNo}:${game.turn}` : null, req: game.myRequestId, result: game.phase === 'result' && !!game.result };
     const p = prev.current;
     prev.current = now;
     if (!p) return; // 처음 그릴 때는 조용히
@@ -22,6 +22,20 @@ export function useGameVoice(room: RoomView, game: GameView) {
       for (const e of log.slice(p.log)) if (e.seat !== me && e.bid.type !== 'dealMiss') speak('bid', e.bid.type === 'pass' ? `${room.seats[e.seat]?.nickname}님 출마 포기` : `${room.seats[e.seat]?.nickname}님 ${bidText(e.bid)} 출마`);
     // 트릭 가져감
     if (now.trickDone && now.trickDone !== p.trickDone) speak('trick', game.lastTrick!.winner === me ? '내가 가져감' : `${room.seats[game.lastTrick!.winner]?.nickname}님 가져감`);
+    // 판 결과: 런·빽런, 어느 편 승리, 내가 이겼으면 축하
+    if (now.result && !(p.result && p.deal === now.deal)) {
+      const r = game.result!;
+      const s = r.settlement;
+      const parts: string[] = [];
+      if (s.defenderWon && s.defenderPoints >= 20) parts.push('런입니다!');
+      else if (s.formula.includes('빽런')) parts.push('빽런입니다!');
+      parts.push(`${s.defenderWon ? '여당' : '야당'} 승리입니다.`);
+      if (me !== null && me !== game.killed) {
+        const mine = me === r.master || me === r.friend;
+        parts.push(mine === s.defenderWon ? '축하합니다!' : '아쉽습니다.');
+      }
+      speak('result', parts.join(' '));
+    }
     // 내 차례
     const kind = game.myRequest?.kind;
     if (now.req !== null && now.req !== p.req && (kind === 'play' || kind === 'bid' || kind === 'final' || kind === 'kill')) speak('turn', '내 차례입니다');

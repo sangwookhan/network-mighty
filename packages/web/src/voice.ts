@@ -11,7 +11,7 @@ export const VOICE_KINDS: { id: VoiceKind; name: string; hint: string; base: num
   { id: 'turn', name: '내 차례', hint: '내 차례입니다 · 5초 남았습니다', base: 0.8 },
   { id: 'contract', name: '당선·최종 공약', hint: '누가 무엇으로 당선, 최종 공약과 프렌드', base: 0.8 },
   { id: 'friend', name: '프렌드 공개', hint: '프렌드는 누구, 초구 프렌드', base: 0.8 },
-  { id: 'result', name: '판 결과', hint: '여당/야당 승리와 점수', base: 0.8 },
+  { id: 'result', name: '판 결과', hint: '여당/야당 승리, 런·빽런, 내가 이기면 축하', base: 0.85 },
   { id: 'bid', name: '공약 부르기', hint: '각자 공약·포기', base: 0.6 },
   { id: 'trick', name: '트릭 가져감', hint: '누가 가져감 (매 트릭)', base: 0.55 },
   { id: 'deal', name: '판 시작·딜 미스·탈락', hint: '몇 번째 판, 딜 미스, 6마 탈락', base: 0.6 },
