@@ -1,4 +1,4 @@
-// 효과음: 파일 없이 Web Audio 로 짧게 합성한다. 켬/끔은 이 브라우저에 저장한다.
+// 효과음: 파일 없이 Web Audio 로 짧게 합성한다. 켬/끔은 이 브라우저에 저장한다. (말로 읽는 안내는 voice.ts)
 
 import { useSyncExternalStore } from 'react';
 
@@ -125,24 +125,6 @@ export function play(name: SoundName) {
       tone(a, 120, 0, 0.12, 'square', 0.08);
       break;
   }
-}
-
-/**
- * 짧은 말(마이티!, 조커! …)을 브라우저 음성 합성으로 읽는다. 소리 끔이면 아무것도 안 한다.
- * 한국어 목소리가 없는 기기에서는 기본 목소리로 읽는다.
- */
-export function say(text: string, volume = 0.9) {
-  if (!enabled || typeof speechSynthesis === 'undefined') return;
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'ko-KR';
-  const ko = speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith('ko'));
-  if (ko) u.voice = ko;
-  u.rate = 1;
-  u.pitch = 1.1;
-  u.volume = volume;
-  // 말하는 중인 것 뒤에 이미 기다리는 말이 있으면 밀린 것을 버리고 새 말부터 (두 개까지는 차례로 읽는다)
-  if (speechSynthesis.pending) speechSynthesis.cancel();
-  speechSynthesis.speak(u);
 }
 
 /**

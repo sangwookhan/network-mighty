@@ -3,7 +3,8 @@
 import type { GameView, RoomView } from '@mighty/protocol';
 import { useEffect, useRef } from 'react';
 import { NO_SUIT } from '@mighty/engine';
-import { play as sfx, say } from '../sound.js';
+import { play as sfx } from '../sound.js';
+import { speak } from '../voice.js';
 import { calloutFor } from './callouts.js';
 
 /** 판의 변화에 맞춰 효과음을 낸다 (처음 그릴 때는 조용히) */
@@ -22,7 +23,7 @@ export function useGameSounds(room: RoomView, game: GameView) {
       const call = calloutFor(game.trick!, room.rules, game.contract?.kiruda ?? NO_SUIT);
       if (call) {
         sfx(call === '간' || call === '오버간' ? 'cut' : 'special');
-        say(`${call}!`);
+        speak('callout', `${call}!`);
       }
     }
     if (now.req !== null && now.req !== p.req) {

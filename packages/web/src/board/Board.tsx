@@ -16,6 +16,7 @@ import { Opponent, SpectatorSeat } from './Seats.js';
 import { StatusBar } from './StatusBar.js';
 import { type Side, type MySide, SIDES, useBoardSize } from './layout.js';
 import { useGameSounds } from './useGameSounds.js';
+import { useGameVoice } from './useGameVoice.js';
 import '../fx.css';
 
 export function Board({ room, game }: { room: RoomView; game: GameView }) {
@@ -54,6 +55,7 @@ export function Board({ room, game }: { room: RoomView; game: GameView }) {
   const kirudaChoice = bidKiruda && bidKiruda.deal === game.dealNo ? bidKiruda.kiruda : forcedFirst ? NO_SUIT : recommended;
 
   useGameSounds(room, game);
+  useGameVoice(room, game);
 
   const style = { '--cw': `${cw}px`, '--ch': `${ch}px`, '--s': scale } as CSSProperties;
   return (

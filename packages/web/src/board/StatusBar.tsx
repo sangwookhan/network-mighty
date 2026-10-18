@@ -4,7 +4,7 @@ import { DECKS, type DeckId, isAvailable, setDeck, useAvailableDecks, useDeck } 
 import { NO_SUIT } from '@mighty/engine';
 import type { GameView, RoomView } from '@mighty/protocol';
 import { shortName } from '../cards.js';
-import { setSoundEnabled, useSoundEnabled } from '../sound.js';
+import { SoundMenu } from '../SoundMenu.js';
 import { SuitIcon, Countdown } from './parts.js';
 
 export const WAIT_TEXT: Record<string, string> = {
@@ -38,7 +38,7 @@ export function StatusBar({ room, game }: { room: RoomView; game: GameView }) {
       {room.me.seat === null && <span className="spectating">관전 중</span>}
       <span className="spacer" />
       <DeckSelect />
-      <SoundToggle />
+      <SoundMenu up />
       <span>{game.dealNo}번째 판{game.phase === 'play' ? ` · ${game.turn + 1}/10` : ''}</span>
     </div>
   );
@@ -56,15 +56,6 @@ export function DeckSelect() {
         </option>
       ))}
     </select>
-  );
-}
-
-export function SoundToggle() {
-  const on = useSoundEnabled();
-  return (
-    <button className={`sound-toggle ${on ? 'on' : 'off'}`} onClick={() => setSoundEnabled(!on)} title={on ? '효과음 끄기' : '효과음 켜기'} aria-pressed={on}>
-      ♪ 소리 {on ? '켬' : '끔'}
-    </button>
   );
 }
 
