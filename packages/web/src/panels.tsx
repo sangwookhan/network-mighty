@@ -73,7 +73,7 @@ export function SuitButtons({ value, onChange, recommended }: { value: Suit; onC
 function GoalStepper({ value, options, onChange }: { value: number | null; options: number[]; onChange: (g: number) => void }) {
   const i = value === null ? -1 : options.indexOf(value);
   return (
-    <span className="stepper">
+    <span className="stepper big-stepper">
       <button disabled={i <= 0} onClick={() => onChange(options[i - 1])} aria-label="낮추기">
         ▽
       </button>
@@ -109,14 +109,20 @@ export function BidPanel({ room, game, kiruda, setKiruda, recommended }: {
   return (
     <div className="panel" data-panel="bid">
       <div className="row">
-        <SuitButtons value={kiruda} onChange={setKiruda} recommended={recommended} />
+        <div className="big-suits">
+          <SuitButtons value={kiruda} onChange={setKiruda} recommended={recommended} />
+        </div>
         <GoalStepper value={g} options={goals} onChange={setGoal} />
       </div>
-      <div className="row text-buttons">
-        <button disabled={!canPass} onClick={() => act({ kind: 'bid', bid: { type: 'pass' } })} title={canPass ? '' : '선은 처음에 포기할 수 없습니다'}>
+      <div className="row bid-actions">
+        <span className="bid-choice">
+          {g === null ? '이 무늬로는 부를 수 있는 공약이 없습니다' : <>{kirudaLabel(kiruda)} <b>{g}</b></>}
+        </span>
+        <span className="spacer" />
+        <button className="bid-pass" disabled={!canPass} onClick={() => act({ kind: 'bid', bid: { type: 'pass' } })} title={canPass ? '' : '선은 처음에 포기할 수 없습니다'}>
           포기
         </button>
-        <button disabled={g === null} onClick={() => g !== null && act({ kind: 'bid', bid: { type: 'bid', kiruda, goal: g } })}>
+        <button className="bid-go" disabled={g === null} onClick={() => g !== null && act({ kind: 'bid', bid: { type: 'bid', kiruda, goal: g } })}>
           출마 !!
         </button>
         {canDealMiss && (
@@ -265,7 +271,7 @@ export function FinalPanel({ room, game, discards, setDiscards }: {
       <div className="final-cols">
         <section className="final-col">
           <h4>기루다 · 공약</h4>
-          <div className="final-suits">
+          <div className="big-suits">
             <SuitButtons
               value={kiruda}
               onChange={(k) => {
@@ -276,7 +282,7 @@ export function FinalPanel({ room, game, discards, setDiscards }: {
             />
           </div>
           <div className="row">
-            <span className="stepper">
+            <span className="stepper big-stepper">
               <button disabled={goal <= min} onClick={() => setGoal(goal - 1)} aria-label="낮추기">
                 ▽
               </button>
