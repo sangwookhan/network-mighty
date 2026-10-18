@@ -55,6 +55,15 @@ export function useVoice(): VoiceSettings {
   );
 }
 
+/**
+ * 한국어 목소리: 기기 안에 있는 목소리(유나 등)를 먼저 쓴다. 크롬의 온라인 목소리('Google 한국의')는
+ * 긴 게임 중에 말없이 멈추는 일이 있어 마지막 선택으로 둔다.
+ */
+function koreanVoice(): SpeechSynthesisVoice | undefined {
+  const ko = speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith('ko'));
+  return ko.find((v) => v.localService && /유나|yuna/i.test(v.name)) ?? ko.find((v) => v.localService) ?? ko[0];
+}
+
 /** 읽기 좋게: 무늬 기호(♠◆♥♣)는 빼고 공백 정리 (이름이 함께 나오므로) */
 const speakable = (text: string) => text.replace(/[♠◆♥♣]/g, '').replace(/\s+/g, ' ').trim();
 
@@ -81,7 +90,7 @@ function next() {
   if (!item || !settings.on) return;
   const u = new SpeechSynthesisUtterance(speakable(item.text));
   u.lang = 'ko-KR';
-  const ko = speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith('ko'));
+  const ko = koreanVoice();
   if (ko) u.voice = ko;
   u.rate = 1;
   u.pitch = 1.1;
@@ -89,9 +98,13 @@ function next() {
   speaking = true;
   const id = ++current;
   const done = () => id === current && (clearTimeout(guard), next());
-  // 끝 알림이 오지 않는 브라우저가 있어 넉넉한 시간 뒤에는 다음으로 넘어간다
-  const guard = setTimeout(done, 1500 + item.text.length * 250);
+  // 끝 알림이 오지 않고 멈춰 버리는 경우(크롬의 온라인 목소리 등)가 있어, 넉넉한 시간이 지나면
+  // 엔진의 줄을 비우고(cancel) 다음 말로 넘어간다. 그러지 않으면 그 뒤의 말이 모두 막힌다
+  const guard = setTimeout(() => id === current && (speechSynthesis.cancel(), next()), 2000 + item.text.length * 250);
   u.onend = u.onerror = done;
+  // 우리 줄은 비었는데 엔진이 아직 무언가를 붙잡고 있으면 풀어 준다
+  if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
+  if (speechSynthesis.paused) speechSynthesis.resume();
   speechSynthesis.speak(u);
 }
 
