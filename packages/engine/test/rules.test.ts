@@ -33,7 +33,7 @@ describe('프리셋 규칙 문자열', () => {
     expect(r).toMatchObject({
       noKirudaGoalMinusOne: false,
       allowGoalOver20: false,
-      dealerCanPassFirst: true,
+      dealerCanPassFirst: false, // 표준 5마 보정: 첫 공약자는 포기 불가 (원본 문자열 값은 true)
       kirudaChangeRaise2: true,
       noKirudaChangeRaise1: false,
       friendEnabled: true,

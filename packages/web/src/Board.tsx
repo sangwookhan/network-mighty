@@ -2,7 +2,7 @@
 // 내 패는 아래에 앞면으로 펼치고, 다른 사람은 판 가장자리에 뒷면으로 둘러앉는다.
 // 공약·안내는 원작의 반투명 상자(DSB)처럼 판 위에 띄운다.
 
-import { JOKER, NO_SUIT, isKiruda, jokercallOf, mightyOf, plainCardName, suitOf, type Bid, type Card, type Suit } from '@mighty/engine';
+import { JOKER, NO_SUIT, isKiruda, isValidBid, jokercallOf, mightyOf, plainCardName, suitOf, type Bid, type Card, type Suit } from '@mighty/engine';
 import type { GameView, RoomView, SeatView } from '@mighty/protocol';
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { CardBackView, CardView, SUIT_NAME, SUIT_SYMBOL, contractText, shortName, sortHand } from './cards.js';
@@ -57,7 +57,10 @@ export function Board({ room, game }: { room: RoomView; game: GameView }) {
   // 공약할 기루다: 판마다 내 패에 맞는 무늬를 추천하고, 고른 것은 그 판 동안 유지한다
   const recommended = recommendKiruda(game.myHand, room.rules);
   const [bidKiruda, setBidKiruda] = useState<{ deal: number; kiruda: Suit } | null>(null);
-  const kirudaChoice = bidKiruda && bidKiruda.deal === game.dealNo ? bidKiruda.kiruda : recommended;
+  // 포기할 수 없는 첫 공약(예: 표준 5마의 딜러)은 '기노'(노기루다 + 기본 공약)를 기본으로 고른다
+  const forcedFirst =
+    req?.kind === 'bid' && !!game.election && game.election.best === null && !isValidBid(game.election, { type: 'pass' }, game.myHand, room.rules);
+  const kirudaChoice = bidKiruda && bidKiruda.deal === game.dealNo ? bidKiruda.kiruda : forcedFirst ? NO_SUIT : recommended;
 
   const style = { '--cw': `${cw}px`, '--ch': `${ch}px`, '--s': scale } as CSSProperties;
   return (

@@ -44,6 +44,9 @@ npm run presets -- 6    # 6번(신촌 5마)만
 - `noKirudaDouble`, `noFriendDouble` (노기·노프 2배)
 - `dealMiss.noPoints`, `dealMiss.allPoints` (점수카드 0장 / 모두 점수카드면 딜 미스)
 
+또한 **표준 5마**는 첫 공약자(딜러)가 처음에 포기할 수 없도록 `dealerCanPassFirst` 를 끈 값으로 돌려준다 (원작 값은 허용, 2026-10-18 결정).
+포기할 수 없는 첫 공약에서 화면은 '기노'(노기루다 + 기본 공약 13)를 기본으로 골라 둔다.
+
 원본 문자열 그대로의 값이 필요하면 `decodeRules(preset.code)`를 쓴다. 방장이 옵션을 직접 끄면 엔진은 옵션대로 동작한다.
 
 ## 테스트

@@ -33,8 +33,9 @@ describe('선거', () => {
     expect(r).toEqual({ type: 'elected', seat: 1, contract: { kiruda: HEART, goal: 14 } });
   });
 
-  it('전원 포기하면 다시 딜', () => {
-    expect(run(std, [pass, pass, pass, pass, pass])).toEqual({ type: 'redeal', reason: 'allPassed' });
+  it('전원 포기하면 다시 딜 (딜러 첫 포기가 허용되는 규칙)', () => {
+    const loose = { ...std, dealerCanPassFirst: true };
+    expect(run(loose, [pass, pass, pass, pass, pass])).toEqual({ type: 'redeal', reason: 'allPassed' });
   });
 
   it('공약은 현재 최고보다 높아야 하고 범위 안이어야 한다', () => {
@@ -60,12 +61,22 @@ describe('선거', () => {
     expect(run(shinchon, [bid(SPADE, 25)])).toMatchObject({ type: 'elected', seat: 0 });
   });
 
+  it('표준 5마: 첫 공약자(딜러)는 포기할 수 없고, 노기루다 13(기노)은 부를 수 있다', () => {
+    const s = startElection(5, 3);
+    expect(isValidBid(s, pass, junk, std)).toBe(false);
+    expect(isValidBid(s, bid(NO_SUIT, 13), junk, std)).toBe(true);
+    // 누가 먼저 공약했으면 딜러도 포기 가능
+    const r = run(std, [bid(SPADE, 13), pass, pass, pass], 1);
+    if (r.type !== 'continue') throw new Error();
+    expect(r.state.current).toBe(0);
+  });
+
   it('딜러의 첫 패스 금지 옵션', () => {
     const strict = { ...std, dealerCanPassFirst: false };
     const s = startElection(5, 2);
     expect(isValidBid(s, pass, junk, strict)).toBe(false);
     expect(() => applyBid(s, pass, junk, strict)).toThrow();
-    expect(isValidBid(s, pass, junk, std)).toBe(true);
+    expect(isValidBid(s, pass, junk, { ...std, dealerCanPassFirst: true })).toBe(true);
   });
 
   it('딜 미스 선언은 패가 조건에 맞을 때만', () => {

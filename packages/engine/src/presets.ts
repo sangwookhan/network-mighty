@@ -36,5 +36,7 @@ export function presetRules(id: number): Rules {
     noKirudaDouble: true,
     noFriendDouble: true,
     dealMiss: { ...r.dealMiss, noPoints: true, allPoints: true },
+    // 표준 5마: 첫 공약자(딜러)는 포기할 수 없다 (최소 '기노' 13). 사용자 결정 2026-10-18
+    ...(id === 1 ? { dealerCanPassFirst: false } : {}),
   };
 }
