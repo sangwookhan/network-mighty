@@ -1,9 +1,9 @@
 // 내 패: 고정 자리 배치, 카드 내기, 바닥패 받기, 조커·조커콜 선택
 
-import { JOKER, NO_SUIT, isKiruda, jokercallOf, mightyOf, suitOf, type Card, type Suit } from '@mighty/engine';
+import { JOKER, NO_SUIT, isKiruda, jokercallOf, mightyOf, powerOf, suitOf, type Card, type Suit } from '@mighty/engine';
 import type { GameView, RoomView } from '@mighty/protocol';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CardView, SUIT_NAME, SUIT_SYMBOL, shortName, sortHand } from '../cards.js';
+import { CardView, SUIT_NAME, SUIT_SYMBOL, shortName } from '../cards.js';
 import { act } from '../net.js';
 import { play as sfx } from '../sound.js';
 import { Dsb } from './Dsb.js';
@@ -20,8 +20,33 @@ export function playCard(a: { kind: 'play'; card: Card; jokerSuit?: Suit; jokerc
 }
 
 /** 무늬별로 묶어 고정 자리를 정한다 (무늬 사이에 틈). 마이티·조커는 맨 앞 묶음 */
-export function handSlots(order: readonly Card[], rules: RoomView['rules'], cw: number, avail: number): { x: Map<Card, number>; width: number } {
-  const mighty = mightyOf(rules, NO_SUIT);
+const isRed = (s: Suit) => s === 2 || s === 3;
+
+/**
+ * 내 패 정렬: 마이티·조커를 맨 왼쪽, 그다음 마이티와 같은 무늬(마이티가 없으면 ♠)부터
+ * 검정·빨강이 번갈아 오도록 무늬를 놓는다 (예: ♠◆♣♥, ◆♠♥♣). 같은 무늬는 센 카드부터.
+ */
+export function handOrder(hand: readonly Card[], rules: RoomView['rules'], kiruda: Suit): Card[] {
+  const mighty = mightyOf(rules, kiruda);
+  const hasMighty = hand.includes(mighty);
+  const present = new Set(hand.filter((c) => c !== mighty && c !== JOKER).map(suitOf));
+  const first: Suit = hasMighty ? suitOf(mighty) : 1;
+  // 있는 무늬만으로, 앞 무늬와 다른 색을 먼저 고른다 (♠◆♥♣ 순으로 우선)
+  const suits: Suit[] = [];
+  let rest = ([1, 2, 3, 4] as Suit[]).filter((s) => present.has(s));
+  if (rest.includes(first)) suits.push(first), (rest = rest.filter((s) => s !== first));
+  while (rest.length) {
+    const last = suits[suits.length - 1];
+    const pick = last === undefined ? rest[0] : (rest.find((s) => isRed(s) !== isRed(last)) ?? rest[0]);
+    suits.push(pick);
+    rest = rest.filter((s) => s !== pick);
+  }
+  const rank = (c: Card) => (c === mighty ? -2 : c === JOKER ? -1 : suits.indexOf(suitOf(c)) * 100 + (20 - powerOf(c)));
+  return [...hand].sort((a, b) => rank(a) - rank(b));
+}
+
+export function handSlots(order: readonly Card[], rules: RoomView['rules'], cw: number, avail: number, kiruda: Suit = NO_SUIT): { x: Map<Card, number>; width: number } {
+  const mighty = mightyOf(rules, kiruda);
   const groupOf = (c: Card) => (c === mighty || c === JOKER ? 0 : suitOf(c));
   let groups = 0;
   for (let i = 1; i < order.length; i++) if (groupOf(order[i]) !== groupOf(order[i - 1])) groups++;
@@ -62,8 +87,8 @@ export function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards,
   let layout = layoutRef.current;
   if (!layout || layout.key !== layoutKey || game.myHand.some((c) => !layout!.order.includes(c))) {
     const before = layout;
-    // 기루다와 상관없는 순서(마이티·조커 → ♠◆♥♣)로 한 번 정렬하고 판 내내 유지
-    layout = { key: layoutKey, order: sortHand(game.myHand, rules, NO_SUIT) };
+    // 마이티·조커 → 마이티 무늬부터 검정·빨강 번갈아 (기루다가 정해지면 그 판의 마이티 기준). 다시 배치할 때까지 유지
+    layout = { key: layoutKey, order: handOrder(game.myHand, rules, kiruda) };
     layoutRef.current = layout;
     if (group === 'final' && before?.key === `${game.dealNo}:deal`) {
       const cards = layout.order.filter((c) => !before.order.includes(c));
@@ -105,7 +130,7 @@ export function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards,
     const t = setTimeout(() => setReceiving(false), START + fresh.cards.length * GAP + FLY);
     return () => clearTimeout(t);
   }, [fresh]);
-  const slots = handSlots(layout.order, rules, cw, portrait ? boardWidth - 8 : Math.min(boardWidth * (boardWidth > 900 ? 0.58 : 0.86), 15 * cw));
+  const slots = handSlots(layout.order, rules, cw, portrait ? boardWidth - 8 : Math.min(boardWidth * (boardWidth > 900 ? 0.58 : 0.86), 15 * cw), kiruda);
   const inHand = new Set(game.myHand);
   // 내가 주공이면 내 패의 기루다를 분홍 테두리로 (노기루다면 없음)
   const showTrump = room.me.seat !== null && game.master === room.me.seat && kiruda !== NO_SUIT;
