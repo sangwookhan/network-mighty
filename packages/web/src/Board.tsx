@@ -110,15 +110,27 @@ function ContractBox({ room, game }: { room: RoomView; game: GameView }) {
     else friendLabel = plainCardName(f.card);
   }
   const revealed = game.friendSeat !== null && game.friendSeat >= 0 ? name(game.friendSeat) : null;
+  // 누가 프렌드인가: 공개됐으면 이름, 없음이 확정이면 '없음', 아직 모르면 '?'
+  const who =
+    f?.kind === 'none' ? null : f?.kind === 'player' ? name(f.seat) : revealed ?? (game.friendSeat === -1 && f && game.phase !== 'final' ? '없음' : '?');
+  const red = c.kiruda === 2 || c.kiruda === 3;
   return (
     <div className="dsb contract-box">
+      {/* 1순위: 기루다 (가장 크게) */}
       <div className="contract-main">
-        <span className="contract-kiruda">{c.kiruda === NO_SUIT ? <span className="icon">N</span> : <SuitIcon suit={c.kiruda} />}</span>
-        <span className="contract-goal">{c.goal}</span>
-        <span className="contract-master">
-          주공 <b>{name(game.master!)}</b>
+        <span className={`kiruda-tile ${red ? 'red' : ''} ${c.kiruda === NO_SUIT ? 'nokiruda' : ''}`} title="기루다">
+          {c.kiruda === NO_SUIT ? '노기' : SUIT_SYMBOL[c.kiruda]}
         </span>
+        <div className="contract-text">
+          <div className="kiruda-name">
+            <span className="small-label">기루다</span> {c.kiruda === NO_SUIT ? '노기루다' : SUIT_NAME[c.kiruda]}
+          </div>
+          <div className="contract-sub">
+            공약 <b className="contract-goal">{c.goal}</b> · 주공 <b className="contract-master">{name(game.master!)}</b>
+          </div>
+        </div>
       </div>
+      {/* 2순위: 프렌드 (조건 → 누구) */}
       <div className="contract-friend">
         <span className="label">프렌드</span>
         {!f && <span className="friend-name">정하는 중…</span>}
@@ -130,13 +142,11 @@ function ContractBox({ room, game }: { room: RoomView; game: GameView }) {
             <span className="friend-name">{friendLabel}</span>
           </>
         )}
-        {f?.kind === 'firstTrick' && <span className="friend-name">초구 프렌드</span>}
+        {f?.kind === 'firstTrick' && <span className="friend-name">초구</span>}
         {f?.kind === 'none' && <span className="friend-name">노프렌드</span>}
-        {f?.kind === 'player' && <span className="friend-name">{name(f.seat)} 지정</span>}
-        {f && f.kind !== 'none' && f.kind !== 'player' && (
-          <span className={`friend-who ${revealed ? 'shown' : ''}`}>
-            {revealed ? `→ ${revealed}` : game.friendSeat === -1 && game.phase !== 'final' ? '→ 없음' : '(미공개)'}
-          </span>
+        {f?.kind === 'player' && <span className="friend-name">지정</span>}
+        {who !== null && f && (
+          <span className={`friend-who ${who === '?' ? 'unknown' : who === '없음' ? 'none' : 'known'}`}>{who}</span>
         )}
       </div>
     </div>

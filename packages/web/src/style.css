@@ -375,3 +375,30 @@ header .spacer { flex: 1; }
 .pause-text { font-size: 1.2em; font-weight: bold; margin-bottom: 6px; }
 .pause-box .text-buttons { justify-content: center; margin-top: 8px; }
 .status-bar .paused-tag { color: #b00; font-weight: bold; }
+
+/* 공약 상자 v2: 기루다를 가장 크게, 프렌드는 그다음 줄에서 '조건 → 누구' */
+.board .contract-box { gap: 8px; padding: 8px 12px 10px; }
+.contract-main { gap: 12px; }
+.kiruda-tile { display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: calc(44px + 22px * var(--s, 1)); height: calc(44px + 22px * var(--s, 1));
+  background: #fff; color: #111; border-radius: 6px; border: 3px solid #ffff00;
+  font-size: calc(34px + 18px * var(--s, 1)); line-height: 1; text-shadow: none; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+.kiruda-tile.red { color: #d40000; }
+.kiruda-tile.nokiruda { font-size: calc(14px + 8px * var(--s, 1)); font-weight: bold; }
+.contract-text { display: flex; flex-direction: column; gap: 2px; }
+.board .kiruda-name { font-size: calc(16px + 9px * var(--s, 1)); font-weight: bold; color: #ffff00; line-height: 1.1; }
+.kiruda-name .small-label { font-size: 0.55em; color: #fff; vertical-align: middle; }
+.board .contract-sub { font-size: calc(11px + 4px * var(--s, 1)); }
+.board .contract-sub .contract-goal { font-size: 1.35em; color: #fff; }
+.board .contract-sub .contract-master { color: #00ffff; }
+.contract-friend { border-top: 1px solid rgba(255,255,255,.3); padding-top: 6px; }
+.friend-who { font-weight: bold; padding: 1px 10px; border-radius: 12px; font-size: calc(12px + 6px * var(--s, 1)); }
+.friend-who.known { background: #00bcd4; color: #002; text-shadow: none; }
+.friend-who.unknown { background: rgba(255,255,255,.15); color: #fff; border: 1px dashed #fff; }
+.friend-who.none { background: #666; color: #fff; }
+.friend-who::before { content: '→ '; }
+.board.portrait .kiruda-tile { width: 40px; height: 40px; font-size: 30px; }
+.board.portrait .kiruda-name { font-size: 18px; }
+/* 공약 상자(왼쪽 위)와 겹치지 않도록 위쪽 두 사람을 조금 안쪽으로 */
+.side-top-left { left: 31%; }
+.side-top-right { left: 69%; }
