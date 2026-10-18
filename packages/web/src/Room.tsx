@@ -4,6 +4,7 @@ import { Board } from './board/Board.js';
 import { BotLevelSelect, PresetInfo, PresetSelect, TURN_CHOICES, TurnSelect, botLevelName } from './Lobby.js';
 import { send, useNet } from './net.js';
 import { SoundMenu } from './SoundMenu.js';
+import { play as sfx } from './sound.js';
 import { speak } from './voice.js';
 import { voiceForSystemLine } from './voiceLines.js';
 
@@ -168,7 +169,13 @@ function useRoomNewsVoice(room: RoomView) {
     const fresh = prev && k < 0 ? lines.filter((l) => l.at > prev.at) : lines.slice(k + 1);
     for (const l of fresh) {
       const v = l.from === null ? voiceForSystemLine(l.text, myName) : null;
-      if (v) speak(v.kind, v.text);
+      if (!v) continue;
+      // 누가 들어온 것은 게임 중에도 꼭 들리게: 초인종 소리 + 다른 말보다 먼저, 크게
+      if (/입장했습니다$/.test(v.text)) {
+        sfx('join');
+        const text = v.text;
+        setTimeout(() => speak('room', text, { urgent: true, volume: 0.9 }), 650); // 딩동 뒤에 말
+      } else speak(v.kind, v.text);
     }
   }, [room.chat, myName]);
 }

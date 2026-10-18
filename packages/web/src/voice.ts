@@ -76,6 +76,8 @@ interface Item {
   kind: VoiceKind;
   text: string;
   at: number;
+  /** 크기를 따로 정할 때 (기본은 종류별 크기) */
+  volume?: number;
 }
 const queue: Item[] = [];
 let speaking = false;
@@ -94,7 +96,7 @@ function next() {
   if (ko) u.voice = ko;
   u.rate = 1;
   u.pitch = 1.1;
-  u.volume = Math.min(1, (VOICE_KINDS.find((k) => k.id === item.kind)?.base ?? 0.8) * settings.volume);
+  u.volume = Math.min(1, (item.volume ?? VOICE_KINDS.find((k) => k.id === item.kind)?.base ?? 0.8) * settings.volume);
   speaking = true;
   const id = ++current;
   const done = () => id === current && (clearTimeout(guard), next());
@@ -113,9 +115,20 @@ function next() {
  * 말하는 중에 온 말은 차례로 읽고, 많이 밀리면 우선순위가 낮은(트릭·공약) 오래된 말부터 버린다.
  * 한국어 목소리가 없는 기기에서는 기본 목소리로 읽는다.
  */
-export function speak(kind: VoiceKind, text: string) {
+export function speak(kind: VoiceKind, text: string, opts: { urgent?: boolean; volume?: number } = {}) {
   if (!settings.on || !settings.kinds[kind] || typeof speechSynthesis === 'undefined') return;
-  queue.push({ kind, text, at: Date.now() });
+  const item = { kind, text, at: Date.now(), volume: opts.volume };
+  if (opts.urgent) {
+    // 급한 말(게임 중 입장 등): 줄 맨 앞에 넣고, 지금 읽는 덜 중요한 말은 끊고 바로 읽는다
+    queue.unshift(item);
+    if (speaking) {
+      current++;
+      speechSynthesis.cancel();
+      next();
+    } else next();
+    return;
+  }
+  queue.push(item);
   while (queue.length > MAX_WAIT) {
     // 가장 낮은 우선순위 중 가장 오래된 것을 버린다
     let drop = 0;

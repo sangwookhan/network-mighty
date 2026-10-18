@@ -29,7 +29,8 @@ export function voiceForSystemLine(text: string, myName?: string): { kind: Voice
     const m = re.exec(text);
     if (!m) continue;
     // 내가 한 방 소식은 읽지 않는다 (내가 방장이 된 것은 알려 준다)
-    if (kind === 'room' && myName && text.startsWith(`${myName}님`) && !text.includes('방장이 되었습니다')) return null;
+    // (일시정지·다시 시작은 모두에게 영향이 있어 내가 했어도 알린다)
+    if (kind === 'room' && myName && text.startsWith(`${myName}님`) && !/방장이 되었습니다|일시정지했습니다|다시 시작했습니다/.test(text)) return null;
     return { kind, text: say(m) };
   }
   return null;

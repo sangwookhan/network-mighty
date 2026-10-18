@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-export type SoundName = 'shuffle' | 'deal' | 'play' | 'collect' | 'turn' | 'elected' | 'win' | 'lose' | 'special' | 'cut';
+export type SoundName = 'shuffle' | 'deal' | 'play' | 'collect' | 'turn' | 'elected' | 'win' | 'lose' | 'special' | 'cut' | 'join';
 
 const KEY = 'mighty.sound';
 let enabled = localStorage.getItem(KEY) !== 'off';
@@ -88,6 +88,8 @@ function swish(a: AudioContext, at: number, dur = 0.09, vol = 0.25, hp = 1800) {
 
 export function play(name: SoundName) {
   if (!enabled) return;
+  // 시험용: 브라우저 콘솔에서 window.__sfxLog = [] 로 켜면 낸 소리 이름을 모은다
+  (window as { __sfxLog?: string[] }).__sfxLog?.push(name);
   const a = audio();
   if (!a) return;
   switch (name) {
@@ -119,6 +121,10 @@ export function play(name: SoundName) {
       break;
     case 'special': // 마이티·조커·조커콜: 반짝이는 소리
       [1047, 1319, 1568, 2093].forEach((f, i) => tone(a, f, i * 0.05, 0.25, 'triangle', 0.08));
+      break;
+    case 'join': // 누가 들어옴: 딩동 초인종
+      tone(a, 988, 0, 0.45, 'sine', 0.16);
+      tone(a, 784, 0.28, 0.6, 'sine', 0.16);
       break;
     case 'cut': // 간·오버간: 탁 치는 소리
       swish(a, 0, 0.1, 0.4, 600);
