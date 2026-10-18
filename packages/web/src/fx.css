@@ -19,3 +19,5 @@
 
 .status-bar .sound-toggle { font-size: 12px; padding: 0 6px; height: 18px; line-height: 16px; cursor: pointer; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border-color: rgba(255, 255, 255, 0.25); }
 .status-bar .sound-toggle.off { color: #889a8f; }
+.status-bar .deck-select { font-size: 12px; height: 18px; padding: 0 4px; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 4px; }
+.status-bar .deck-select option { color: #000; }

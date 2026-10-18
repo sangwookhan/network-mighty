@@ -1,5 +1,6 @@
 // 원작식 상태 표시줄: 기루다 | 공약 | 프렌드 | 메시지
 
+import { DECKS, type DeckId, setDeck, useDeck } from '../deck.js';
 import { NO_SUIT } from '@mighty/engine';
 import type { GameView, RoomView } from '@mighty/protocol';
 import { shortName } from '../cards.js';
@@ -36,9 +37,24 @@ export function StatusBar({ room, game }: { room: RoomView; game: GameView }) {
       {room.paused && <span className="paused-tag">일시정지</span>}
       {room.me.seat === null && <span className="spectating">관전 중</span>}
       <span className="spacer" />
+      <DeckSelect />
       <SoundToggle />
       <span>{game.dealNo}번째 판{game.phase === 'play' ? ` · ${game.turn + 1}/10` : ''}</span>
     </div>
+  );
+}
+
+/** 카드 디자인 고르기 (이 브라우저에 저장) */
+export function DeckSelect() {
+  const deck = useDeck();
+  return (
+    <select className="deck-select" value={deck} onChange={(e) => setDeck(e.target.value as DeckId)} title={DECKS.find((d) => d.id === deck)?.hint} aria-label="카드 디자인">
+      {DECKS.map((d) => (
+        <option key={d.id} value={d.id}>
+          카드: {d.name}
+        </option>
+      ))}
+    </select>
   );
 }
 
