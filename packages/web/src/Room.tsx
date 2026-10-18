@@ -1,6 +1,6 @@
 import type { RoomView } from '@mighty/protocol';
 import { useEffect, useRef, useState } from 'react';
-import { Board } from './Board.js';
+import { Board } from './board/Board.js';
 import { PresetInfo, PresetSelect, TURN_CHOICES, TurnSelect } from './Lobby.js';
 import { send, useNet } from './net.js';
 
