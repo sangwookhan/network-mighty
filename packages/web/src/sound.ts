@@ -216,7 +216,7 @@ export const CARD_SOUNDS: { id: string; name: string; desc: string; make: (a: Au
   },
 ];
 
-let cardSound = 'tap-light-3';
+let cardSound = 'tok-vary';
 /** 카드 내는 소리 바꾸기 (들어 보기 페이지용, 고른 뒤에는 기본값을 바꾼다) */
 export const currentCardSound = () => cardSound;
 
