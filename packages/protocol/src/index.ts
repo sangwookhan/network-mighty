@@ -164,6 +164,11 @@ export interface GameView {
   waitingFor: { seat: number; kind: Request['kind']; remainingMs: number | null }[];
   myRequest: Request | null;
   myRequestId: number | null;
+  /**
+   * 다시 섞기 직전 잠깐 보여 주는 정보. 딜 미스면 선언한 사람과 그 사람의 패(모두에게 공개),
+   * 모두 포기면 seat=null, hand=[]. 예전 서버는 이 필드를 보내지 않는다.
+   */
+  redeal?: { reason: 'dealMiss' | 'allPassed'; seat: number | null; hand: Card[] } | null;
   result: {
     settlement: Settlement;
     master: number;

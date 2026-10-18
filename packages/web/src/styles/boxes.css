@@ -167,6 +167,23 @@
 .board.portrait .kiruda-tile { width: 40px; height: 40px; font-size: 30px; }
 .board.portrait .kiruda-name { font-size: 18px; }
 
+/* 딜 미스: 선언한 사람의 패를 한 장씩 뒤집어 펼친다 */
+.dsb-redeal { z-index: 9; min-width: min(420px, 94%); max-width: 96%; text-align: center; background: rgba(40, 0, 0, 0.92); border-color: #ff5252; }
+.dsb-redeal .dsb-title { font-size: calc(16px + 8px * var(--s, 1)); color: #ff5252; letter-spacing: 2px; }
+.redeal-who { font-size: calc(14px + 5px * var(--s, 1)); margin: 4px 0 10px; }
+.redeal-who b { color: #00ffff; font-size: 1.2em; }
+.redeal-why { color: #ffff00; font-weight: bold; }
+.redeal-cards { display: flex; justify-content: center; padding: 6px 4px 4px; }
+.redeal-card { flex: none; animation: redeal-flip 0.45s cubic-bezier(.2, .8, .25, 1) backwards; }
+.redeal-card + .redeal-card { margin-left: calc(var(--cw) * -0.38); }
+.redeal-card.point .card { outline: 3px solid #ffff00; border-radius: 4px; }
+.redeal-note { margin-top: 8px; color: #ddd; font-size: 0.9em; }
+@keyframes redeal-flip { from { transform: translateY(-40px) rotateY(90deg) scale(0.8); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .redeal-card { animation: none; } }
+.board.portrait .redeal-card .card { width: calc(var(--cw) * 0.85); height: calc(var(--ch) * 0.85); }
+.board.portrait .redeal-card + .redeal-card { margin-left: calc(var(--cw) * -0.5); }
+.board.portrait .redeal-who { font-size: 15px; }
+
 /* 정산 상자 */
 .dsb-result { width: min(620px, 94%); max-height: 92%; overflow: auto; }
 .dsb .panel.result { gap: 10px; align-items: stretch; }

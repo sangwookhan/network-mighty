@@ -1,7 +1,8 @@
 // 화면 데모용 고정 상태 만들기: 실제 게임을 진행하면서 '나'(0번 자리)가 보는 방 정보를 시점별로 저장한다.
 //   npx tsx scripts/fixtures.ts  →  packages/web/dev/fixtures/*.json
 // board-demo.html 이 이 파일을 그대로 그려, 화면 정리 전후를 비교하거나 디자인 작업에 쓴다.
-// (5p-waiting.json 은 5p-bid.json 에서 게임을 빼고 빈자리를 둔 대기실 상태로 손으로 만든 것)
+// (5p-waiting.json 은 5p-bid.json 에서 게임을 빼고 빈자리를 둔 대기실 상태로, 5p-dealmiss.json 은 5p-bid.json 에
+//  딜 미스 공개(redeal)를 넣어 손으로 만든 것)
 
 import { writeFileSync } from 'node:fs';
 import { NO_SUIT, SUITS, goalRange, isValidBid, type Bid } from '@mighty/engine';

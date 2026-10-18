@@ -62,9 +62,11 @@ export interface Timing {
   botDelayMs: number;
   trickPauseMs: number;
   redealPauseMs: number;
+  /** 딜 미스 때 선언한 사람의 패를 보여 주는 시간 (없으면 redealPauseMs) */
+  dealMissPauseMs?: number;
 }
 
-export const DEFAULT_TIMING: Timing = { botDelayMs: 700, trickPauseMs: 1500, redealPauseMs: 1500 };
+export const DEFAULT_TIMING: Timing = { botDelayMs: 700, trickPauseMs: 1500, redealPauseMs: 1500, dealMissPauseMs: 3000 };
 
 class Aborted extends Error {}
 
@@ -135,6 +137,7 @@ export class Game {
   private nextRequestId = 1;
   private aborted = false;
   private sleepers = new Set<() => void>();
+  private redeal: GameView['redeal'] = null;
 
   constructor(
     private host: GameHost,
@@ -413,8 +416,13 @@ export class Game {
         this.host.changed();
       }
       if (outcome.type === 'redeal') {
-        this.host.systemChat(outcome.reason === 'dealMiss' ? '딜 미스! 다시 섞습니다' : '모두 포기해서 다시 섞습니다');
-        await this.sleep(this.timing.redealPauseMs);
+        // 딜 미스는 선언한 사람의 패를 모두에게 보여 주고 잠깐 기다린 뒤 다시 섞는다
+        const dealMiss = outcome.reason === 'dealMiss';
+        const seat = dealMiss ? this.electionLog[this.electionLog.length - 1].seat : null;
+        this.redeal = { reason: outcome.reason, seat, hand: seat === null ? [] : [...this.hands[seat]] };
+        this.host.systemChat(dealMiss ? `${this.host.seatName(seat!)}님의 딜 미스! 다시 섞습니다` : '모두 포기해서 다시 섞습니다');
+        this.host.changed();
+        await this.sleep(dealMiss ? (this.timing.dealMissPauseMs ?? this.timing.redealPauseMs) : this.timing.redealPauseMs);
         continue;
       }
       elected = { seat: outcome.seat, contract: outcome.contract };
@@ -565,6 +573,7 @@ export class Game {
 
   private resetDeal(): void {
     const n = this.rules.players;
+    this.redeal = null;
     this.phase = 'election';
     this.active = [...Array(n).keys()];
     this.killed = null;
@@ -661,6 +670,7 @@ export class Game {
       waitingFor: this.waitingFor(),
       myRequest: viewerSeat !== null ? this.requestFor(viewerSeat) : null,
       myRequestId: viewerSeat !== null ? this.requestIdFor(viewerSeat) : null,
+      redeal: this.redeal,
       result: this.result,
     };
   }
