@@ -35,15 +35,7 @@
 .suit-btn .rec { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 2px; font-size: 10px; font-weight: bold; color: #ffff00; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
 .stepper { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; }
 .goal-value { min-width: 28px; text-align: center; font-size: 20px; color: #fff; }
-.friend-select { display: flex; gap: 12px; align-items: flex-start; }
-.friend-options { flex: 1; }
-.friend-preview { width: calc(var(--cw) * 1.4); display: flex; justify-content: center; }
-.friend-preview .card { width: calc(var(--cw) * 1.4); height: calc(var(--ch) * 1.4); }
-.friend-word { font-size: 18px; font-weight: bold; color: #00ffff; padding-top: 20px; }
 /* 주공 정리: 추천 버튼과 이유 */
-.advice-row { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; }
-.dsb .advice-row button { border: 1px solid #ffff00; color: #ffff00; }
-.advice { color: #00ffff; font-size: 0.9em; }
 /* 조커 선: 기루다 컴 강조 */
 .dsb .kiruda-come { background: #ffd54f; border-color: #c9a400; color: #000; font-weight: bold; text-shadow: none; }
 .kiruda-come-text { color: #ffd54f; }
@@ -58,7 +50,50 @@
 .board.portrait .dsb-bid { left: 50%; width: 96%; bottom: calc(var(--ch) + 70px); }
 .board.portrait .dsb-center { width: 96%; max-height: 70%; overflow: auto; top: 44%; }
 .board.portrait .dsb .suit-btn { width: 28px; height: 28px; }
-.board.portrait .friend-select { flex-direction: column-reverse; align-items: center; }
+
+/* 주공 정리 상자: 위에 '지금 고른 기루다·공약 | 프렌드' 요약을 크게, 아래에 두 칸(기루다·공약 / 프렌드) */
+.dsb-final { width: min(780px, 96%); background: rgba(0, 32, 8, 0.93); }
+.final-summary { display: flex; gap: 10px; }
+.fs-item { flex: 1; display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(0, 0, 0, 0.35); border: 2px solid #ffff00; }
+.fs-friend { border-color: #00ffff; }
+.fs-text { display: flex; flex-direction: column; min-width: 0; }
+.fs-label { font-size: 0.8em; color: #ddd; }
+.fs-main { font-size: calc(18px + 8px * var(--s, 1)); line-height: 1.15; color: #ffff00; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-friend .fs-main { color: #00ffff; }
+.fs-goal { color: #fff; }
+.fs-sub { font-size: 0.85em; color: #ddd; }
+.fs-card .card { width: calc(var(--cw) * 0.8); height: calc(var(--ch) * 0.8); }
+.fs-word { display: inline-flex; align-items: center; justify-content: center; flex: none; width: calc(var(--cw) * 0.8); height: calc(var(--ch) * 0.8);
+  border: 2px dashed #00ffff; border-radius: 6px; color: #00ffff; font-weight: bold; font-size: 1.1em; }
+.final-cols { display: flex; gap: 10px; align-items: stretch; }
+.final-col { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 0; }
+.final-col h4 { margin: 0; font-size: 0.9em; color: #ffff00; }
+.board .dsb .final-suits .suit-btn { width: calc(30px + 14px * var(--s, 1)); height: calc(30px + 14px * var(--s, 1)); font-size: calc(18px + 10px * var(--s, 1)); border-width: 3px; }
+.board .dsb .final-suits .suit-btn:not([data-kiruda="1"]):not([data-kiruda="2"]):not([data-kiruda="3"]):not([data-kiruda="4"]) { width: auto; padding: 0 8px; font-size: calc(12px + 4px * var(--s, 1)); }
+.dsb .final-suits .suit-btn.on { border-color: #ffff00; box-shadow: 0 0 0 3px #ffff00, 0 0 12px 2px rgba(255, 255, 0, 0.6); }
+.final-suits .suit-buttons { gap: 6px; flex-wrap: wrap; }
+.final-col .stepper { margin-left: 0; }
+.board .final-col .goal-value { font-size: calc(18px + 10px * var(--s, 1)); min-width: 44px; }
+.dsb .final-col .stepper button { font-size: 1.2em; padding: 2px 12px; }
+.friend-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dsb .friend-chips button { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.45); border-radius: 14px; padding: 3px 12px; font-weight: bold; text-shadow: 1px 1px 0 #000; }
+.dsb .friend-chips button:hover:not(:disabled) { border-color: #00ffff; }
+.dsb .friend-chips button.on { background: #00ffff; border-color: #00ffff; color: #002; text-shadow: none; }
+.dsb .friend-chips button:disabled { opacity: 0.35; }
+.final-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.final-foot .spacer { flex: 1; }
+.final-discards { color: #ffff00; }
+.dsb .final-foot .text-buttons button { border: 1px solid #ffff00; color: #ffff00; }
+.advice { color: #00ffff; font-size: 0.9em; }
+.dsb .final-confirm { background: #ffd54f; border: 0; color: #000; font-weight: bold; font-size: 1.1em; padding: 6px 26px; text-shadow: none; }
+.dsb .final-confirm:disabled { background: #777; color: #ccc; opacity: 1; }
+.board.portrait .final-cols { flex-direction: column; gap: 6px; }
+.board.portrait .final-summary { gap: 6px; }
+.board.portrait .fs-item { padding: 4px 6px; gap: 6px; }
+.board.portrait .fs-main { font-size: 18px; }
+.board.portrait .fs-sub { font-size: 11px; }
+.board.portrait .final-summary .kiruda-tile { width: 36px; height: 36px; font-size: 26px; border-width: 2px; }
+.board.portrait .fs-card .card, .board.portrait .fs-word { width: calc(var(--cw) * 0.55); height: calc(var(--ch) * 0.55); font-size: 12px; }
 
 /* 공약 상자: 기루다를 가장 크게, 그 옆에 공약·주공, 프렌드는 다음 줄에서 '조건 → 누구' */
 .contract-box { position: absolute; top: 8px; left: 8px; z-index: 5; padding: 6px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 190px; }

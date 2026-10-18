@@ -65,7 +65,7 @@ export function Board({ room, game }: { room: RoomView; game: GameView }) {
       {game.contract && game.master !== null && <ContractBox room={room} game={game} />}
       {req?.kind === 'bid' && <Dsb title="공약을 정해 주세요" className="dsb-bid"><BidPanel room={room} game={game} kiruda={kirudaChoice} setKiruda={(k) => setBidKiruda({ deal: game.dealNo, kiruda: k })} recommended={recommended} /></Dsb>}
       {req?.kind === 'kill' && <Dsb title="탈락 지목" className="dsb-center dsb-low"><KillPanel game={game} /></Dsb>}
-      {req?.kind === 'final' && <Dsb title="당선을 축하드립니다 !!" className="dsb-center"><FinalPanel room={room} game={game} discards={discards} setDiscards={setDiscards} /></Dsb>}
+      {req?.kind === 'final' && <Dsb title="당선을 축하드립니다 !!" className="dsb-center dsb-final"><FinalPanel room={room} game={game} discards={discards} setDiscards={setDiscards} /></Dsb>}
       {game.phase === 'result' && game.result && <Dsb className="dsb-center dsb-result"><ResultPanel room={room} game={game} /></Dsb>}
       {me !== null && (
         <MyHand room={room} game={game} kiruda={kiruda} boardWidth={w} cw={cw} portrait={portrait} discards={req?.kind === 'final' ? discards : null} setDiscards={setDiscards} />

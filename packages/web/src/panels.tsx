@@ -207,51 +207,98 @@ export function FinalPanel({ room, game, discards, setDiscards }: {
     setAdvice(a.reason);
   };
 
+  // 한눈에 보는 요약: 지금 고른 기루다·공약과 프렌드
+  const quickLabel = friend.kind === 'card' ? quick.find((q) => sameChoice(q.choice, friend))?.label : undefined;
+  const friendTitle =
+    friend.kind === 'card'
+      ? (quickLabel ?? shortName(friend.card))
+      : friend.kind === 'none'
+        ? '노 프랜드'
+        : friend.kind === 'firstTrick'
+          ? '초구'
+          : room.seats[friend.seat].nickname;
+  const friendSub =
+    friend.kind === 'card'
+      ? quickLabel
+        ? `${shortName(friend.card)} 가진 사람`
+        : '이 카드를 가진 사람'
+      : friend.kind === 'none'
+        ? '혼자 칩니다'
+        : friend.kind === 'firstTrick'
+          ? '첫 트릭을 이긴 사람'
+          : '지목한 사람';
+  const changed = kiruda !== elected.kiruda || goal !== elected.goal;
+
   return (
-    <div className="panel" data-panel="final">
-      <p>
-        버릴 카드 3장을 아래 패에서 눌러 올리세요 <b>({discards.length}/3)</b>
-        {discards.length > 0 && <span> {discards.map(shortName).join(' ')}</span>}
-        <span className="text-buttons advice-row">
-          <button onClick={applyAdvice} title="버릴 카드·기루다·공약·프렌드를 추천대로 채웁니다">추천</button>
-          {advice && <span className="advice">{advice}</span>}
-        </span>
-      </p>
-      <p>
-        지금 기루다와 목표 점수를 바꿀 수 있습니다 <span className="hint">(당선: {contractText(elected.kiruda, elected.goal)})</span>
-      </p>
-      <div className="row">
-        <SuitButtons
-          value={kiruda}
-          onChange={(k) => {
-            // 기루다를 바꾸면 규칙상 최소 공약으로, 원래 기루다로 돌아오면 당선 공약으로
-            setKiruda(k);
-            setGoal(minFinalGoal(elected, k, rules));
-          }}
-        />
-        <span className="stepper">
-          <button disabled={goal <= min} onClick={() => setGoal(goal - 1)} aria-label="낮추기">
-            ▽
-          </button>
-          <b className="goal-value">{goal}</b>
-          <button disabled={goal >= max} onClick={() => setGoal(goal + 1)} aria-label="올리기">
-            △
-          </button>
-        </span>
-        {!contractOk && <span className="error">{kiruda === elected.kiruda ? '공약을 낮출 수 없습니다' : '기루다를 바꾸려면 공약을 더 올려야 합니다'}</span>}
+    <div className="panel final" data-panel="final">
+      <div className="final-summary">
+        <div className="fs-item">
+          <span className={`kiruda-tile ${kiruda === 2 || kiruda === 3 ? 'red' : ''} ${kiruda === NO_SUIT ? 'nokiruda' : ''}`}>
+            {kiruda === NO_SUIT ? '노기' : SUIT_SYMBOL[kiruda]}
+          </span>
+          <div className="fs-text">
+            <span className="fs-label">기루다 · 공약</span>
+            <b className="fs-main">
+              {kiruda === NO_SUIT ? '노기루다' : SUIT_NAME[kiruda]} <span className="fs-goal">{goal}</span>
+            </b>
+            <span className="fs-sub">{changed ? `당선 때 ${contractText(elected.kiruda, elected.goal)}에서 바꿈` : '당선 공약 그대로'}</span>
+          </div>
+        </div>
+        {rules.friendEnabled && (
+          <div className="fs-item fs-friend">
+            {friend.kind === 'card' ? (
+              <span className="fs-card">
+                <CardView card={friend.card} rules={rules} kiruda={kiruda} />
+              </span>
+            ) : (
+              <span className="fs-word">{friend.kind === 'none' ? '없음' : friend.kind === 'firstTrick' ? '초구' : '지목'}</span>
+            )}
+            <div className="fs-text">
+              <span className="fs-label">프렌드</span>
+              <b className="fs-main">{friendTitle}</b>
+              <span className="fs-sub">{friendSub}</span>
+            </div>
+          </div>
+        )}
       </div>
-      {rules.friendEnabled ? (
-        <div className="friend-select">
-          <div className="friend-options">
-            <p>원하는 프랜드 카드나 플레이어를 선택하세요</p>
-            <div className="row text-buttons">
+
+      <div className="final-cols">
+        <section className="final-col">
+          <h4>기루다 · 공약</h4>
+          <div className="final-suits">
+            <SuitButtons
+              value={kiruda}
+              onChange={(k) => {
+                // 기루다를 바꾸면 규칙상 최소 공약으로, 원래 기루다로 돌아오면 당선 공약으로
+                setKiruda(k);
+                setGoal(minFinalGoal(elected, k, rules));
+              }}
+            />
+          </div>
+          <div className="row">
+            <span className="stepper">
+              <button disabled={goal <= min} onClick={() => setGoal(goal - 1)} aria-label="낮추기">
+                ▽
+              </button>
+              <b className="goal-value">{goal}</b>
+              <button disabled={goal >= max} onClick={() => setGoal(goal + 1)} aria-label="올리기">
+                △
+              </button>
+            </span>
+            {!contractOk && <span className="error">{kiruda === elected.kiruda ? '공약을 낮출 수 없습니다' : '기루다를 바꾸려면 공약을 더 올려야 합니다'}</span>}
+          </div>
+        </section>
+        {rules.friendEnabled ? (
+          <section className="final-col">
+            <h4>프렌드</h4>
+            <div className="friend-chips">
               {quick.map((q) => (
                 <button key={q.label} className={sameChoice(q.choice, friend) ? 'on' : ''} disabled={discards.length === 3 && !validFor(q.choice)} onClick={() => pick(q.choice)}>
                   {q.label}
                 </button>
               ))}
             </div>
-            <div className="row text-buttons">
+            <div className="friend-chips players">
               {game.active
                 .filter((s) => s !== game.master)
                 .map((s) => {
@@ -267,24 +314,30 @@ export function FinalPanel({ room, game, discards, setDiscards }: {
               <span className="hint">다른 카드:</span>
               <CardPicker label="선택" isAllowed={(c) => !masterHand.includes(c) && !discards.includes(c)} onPick={(card) => pick({ kind: 'card', card })} />
             </div>
-          </div>
-          <div className="friend-preview">
-            {friend.kind === 'card' ? (
-              <CardView card={friend.card} rules={rules} kiruda={kiruda} />
-            ) : (
-              <div className="friend-word">{friend.kind === 'none' ? '노 프랜드' : friend.kind === 'firstTrick' ? '초구' : room.seats[friend.seat].nickname}</div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <p className="hint">이 규칙은 프랜드가 없습니다</p>
-      )}
-      <div className="row text-buttons">
-        <button className="confirm" disabled={!contractOk || !friendOk} onClick={() => act({ kind: 'final', discards, contract, friend })}>
+          </section>
+        ) : (
+          <section className="final-col">
+            <h4>프렌드</h4>
+            <p className="hint">이 규칙은 프랜드가 없습니다</p>
+          </section>
+        )}
+      </div>
+
+      <div className="final-foot">
+        <span>
+          버릴 카드 <b>({discards.length}/3)</b>
+          {discards.length > 0 && <span className="final-discards"> {discards.map(shortName).join(' ')}</span>}
+        </span>
+        <span className="text-buttons">
+          <button onClick={applyAdvice} title="버릴 카드·기루다·공약·프렌드를 추천대로 채웁니다">추천</button>
+        </span>
+        {advice && <span className="advice">{advice}</span>}
+        <span className="spacer" />
+        {discards.length === 3 && !friendOk && <span className="error">이 프랜드는 지정할 수 없습니다</span>}
+        {discards.length < 3 && <span className="hint">아래 패에서 버릴 카드 3장을 고르세요</span>}
+        <button className="final-confirm" disabled={!contractOk || !friendOk} onClick={() => act({ kind: 'final', discards, contract, friend })}>
           확정
         </button>
-        {discards.length === 3 && !friendOk && <span className="error">이 프랜드는 지정할 수 없습니다</span>}
-        {discards.length < 3 && <span className="hint">'확정'을 클릭하세요 (버릴 카드 3장 선택 후)</span>}
       </div>
     </div>
   );
