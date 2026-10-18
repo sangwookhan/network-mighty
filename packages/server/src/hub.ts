@@ -91,7 +91,11 @@ export class Hub {
       this.users.set(user.id, user);
       this.byToken.set(user.token, user);
     }
-    if (user.conn && user.conn !== conn) user.conn.close();
+    if (user.conn && user.conn !== conn) {
+      // 같은 사람이 다른 창에서 접속: 먼저 있던 창에 알리고 끊는다 (그 창은 자동 재접속을 멈춘다)
+      user.conn.send({ t: 'replaced' });
+      user.conn.close();
+    }
     user.conn = conn;
     clearTimeout(user.graceTimer);
     conn.send({ t: 'welcome', token: user.token, playerId: user.id, nickname: user.nickname });

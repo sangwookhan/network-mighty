@@ -15,6 +15,7 @@ class Client {
   room: RoomView | null = null;
   errors: string[] = [];
   lobbyRooms: { id: string }[] = [];
+  replaced = false;
   dealsFinished = new Set<number>();
   private session: ReturnType<Hub['connect']> | null = null;
   /** 이 판 번호까지는 계속, 그 뒤에는 그만 */
@@ -40,6 +41,7 @@ class Client {
     if (!this.session) return;
     if (m.t === 'welcome') (this.token = m.token), (this.playerId = m.playerId);
     if (m.t === 'error') this.errors.push(m.message);
+    if (m.t === 'replaced') this.replaced = true;
     if (m.t === 'lobby') this.lobbyRooms = m.rooms;
     if (m.t === 'room') {
       this.room = m.room;
@@ -219,6 +221,21 @@ describe('통합: 사람 3명 + 봇', () => {
     await until(() => a.room?.paused === null && a.dealsFinished.size >= 1, 20_000);
     expect([a, b, c].flatMap((x) => x.errors).filter((e) => !e.includes('일시정지'))).toEqual([]);
     hub.closeRoom(hub.rooms.get(a.room!.id)!);
+  });
+
+  it('같은 사람이 다른 창에서 접속하면 먼저 창은 밀려나고, 새 창이 자리를 이어받는다', async () => {
+    const { hub, a, roomId } = await setup(1);
+    const a2 = new Client(hub, '가');
+    a2.token = a.token;
+    a2.connect();
+    await until(() => a.replaced && !!a2.room);
+    expect(a2.playerId).toBe(a.playerId);
+    expect(a2.room!.me.seat).toBe(0);
+    // 밀려난 연결이 보내는 메시지는 무시된다
+    a.send({ t: 'start' });
+    await new Promise((r) => setTimeout(r, 30));
+    expect(hub.rooms.get(roomId)!.status).toBe('waiting');
+    hub.closeRoom(hub.rooms.get(roomId)!);
   });
 
   it('사람이 모두 나가면 방이 닫힌다', async () => {

@@ -45,6 +45,8 @@ export type ServerMessage =
   | { t: 'lobby'; rooms: RoomSummary[]; online: number }
   | { t: 'room'; room: RoomView }
   | { t: 'leftRoom'; reason?: string }
+  /** 같은 사람이 다른 창에서 접속해서 이 연결은 끊긴다 (자동 재접속하지 말 것) */
+  | { t: 'replaced' }
   | { t: 'error'; message: string };
 
 export interface RoomSummary {

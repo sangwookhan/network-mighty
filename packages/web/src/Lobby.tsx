@@ -1,10 +1,47 @@
 import { PRESETS, describePreset } from '@mighty/engine';
-import { useState } from 'react';
-import { send, sendHello, useNet } from './net.js';
+import { useEffect, useState } from 'react';
+import { chooseNewNickname, continueAsLast, send, sendHello, takeBack, useNet } from './net.js';
 
 export function NicknameScreen() {
   const net = useNet();
-  const [name, setName] = useState('');
+  const [name, setName] = useState(net.needNickname?.suggested ?? '');
+  const suggested = net.needNickname?.suggested;
+  useEffect(() => {
+    if (suggested) setName((n) => n || suggested);
+  }, [suggested]);
+  // 새 창: 마지막으로 쓴 닉네임으로 계속할지
+  if (net.choose) {
+    return (
+      <div className="center-box">
+        <h1>마이티</h1>
+        <p>이 브라우저에서 마지막으로 쓴 닉네임이 있습니다</p>
+        <div className="choice">
+          <button className="primary" onClick={continueAsLast}>
+            {net.choose.nickname}님으로 계속
+          </button>
+          <button onClick={chooseNewNickname}>다른 닉네임으로 입장</button>
+        </div>
+        <p className="hint">계속하면 다른 창에서 열려 있던 {net.choose.nickname}님 화면은 이 창으로 넘어옵니다.</p>
+      </div>
+    );
+  }
+  // 같은 사람이 다른 창에서 접속해서 밀려남
+  if (net.replaced) {
+    return (
+      <div className="center-box">
+        <h1>마이티</h1>
+        <p>
+          <b>{net.replaced.nickname}</b>님이 다른 창에서 접속했습니다.
+        </p>
+        <div className="choice">
+          <button className="primary" onClick={takeBack}>
+            여기서 계속
+          </button>
+          <button onClick={chooseNewNickname}>다른 닉네임으로 입장</button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="center-box">
       <h1>마이티</h1>

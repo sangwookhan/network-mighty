@@ -406,3 +406,7 @@ header .spacer { flex: 1; }
 /* 내 패: 다시 배치할 때 미끄러지듯 이동 */
 .my-hand-cards .slot { transition: left 0.35s ease; }
 .my-hand-cards { transition: width 0.35s ease; }
+
+/* 입장 선택 (새 창 / 다른 창에서 접속됨) */
+.center-box .choice { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.center-box .choice button { padding: 8px 12px; }
