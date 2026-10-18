@@ -57,17 +57,20 @@
 .fs-item { flex: 1; display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(0, 0, 0, 0.35); border: 2px solid #ffff00; }
 .fs-friend { border-color: #00ffff; }
 .fs-text { display: flex; flex-direction: column; min-width: 0; }
-.fs-label { font-size: 0.8em; color: #ddd; }
-.fs-main { font-size: calc(18px + 8px * var(--s, 1)); line-height: 1.15; color: #ffff00; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-label { align-self: flex-start; font-size: calc(12px + 3px * var(--s, 1)); font-weight: bold; color: #000; background: #ffff00; padding: 1px 8px; border-radius: 3px; text-shadow: none; margin-bottom: 2px; }
+.fs-friend .fs-label { background: #00ffff; }
+.fs-main { font-size: calc(20px + 12px * var(--s, 1)); line-height: 1.15; color: #ffff00; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 2px 2px 0 #000; }
 .fs-friend .fs-main { color: #00ffff; }
 .fs-goal { color: #fff; }
-.fs-sub { font-size: 0.85em; color: #ddd; }
+.fs-sub { font-size: calc(11px + 3px * var(--s, 1)); color: #fff; }
 .fs-card .card { width: calc(var(--cw) * 0.8); height: calc(var(--ch) * 0.8); }
 .fs-word { display: inline-flex; align-items: center; justify-content: center; flex: none; width: calc(var(--cw) * 0.8); height: calc(var(--ch) * 0.8);
   border: 2px dashed #00ffff; border-radius: 6px; color: #00ffff; font-weight: bold; font-size: 1.1em; }
 .final-cols { display: flex; gap: 10px; align-items: stretch; }
 .final-col { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.2); min-width: 0; }
-.final-col h4 { margin: 0; font-size: 0.9em; color: #ffff00; }
+.final-col h4 { margin: 0; font-size: calc(12px + 4px * var(--s, 1)); color: #ffff00; padding-left: 8px; border-left: 4px solid #ffff00; }
+.final-col.friend-col h4 { color: #00ffff; border-left-color: #00ffff; }
 .board .dsb .final-suits .suit-btn { width: calc(30px + 14px * var(--s, 1)); height: calc(30px + 14px * var(--s, 1)); font-size: calc(18px + 10px * var(--s, 1)); border-width: 3px; }
 .board .dsb .final-suits .suit-btn:not([data-kiruda="1"]):not([data-kiruda="2"]):not([data-kiruda="3"]):not([data-kiruda="4"]) { width: auto; padding: 0 8px; font-size: calc(12px + 4px * var(--s, 1)); }
 .dsb .final-suits .suit-btn.on { border-color: #ffff00; box-shadow: 0 0 0 3px #ffff00, 0 0 12px 2px rgba(255, 255, 0, 0.6); }
@@ -90,8 +93,9 @@
 .board.portrait .final-cols { flex-direction: column; gap: 6px; }
 .board.portrait .final-summary { gap: 6px; }
 .board.portrait .fs-item { padding: 4px 6px; gap: 6px; }
-.board.portrait .fs-main { font-size: 18px; }
-.board.portrait .fs-sub { font-size: 11px; }
+.board.portrait .fs-main { font-size: 20px; }
+.board.portrait .fs-label { font-size: 12px; }
+.board.portrait .fs-sub { font-size: 12px; }
 .board.portrait .final-summary .kiruda-tile { width: 36px; height: 36px; font-size: 26px; border-width: 2px; }
 .board.portrait .fs-card .card, .board.portrait .fs-word { width: calc(var(--cw) * 0.55); height: calc(var(--ch) * 0.55); font-size: 12px; }
 

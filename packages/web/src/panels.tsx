@@ -289,7 +289,7 @@ export function FinalPanel({ room, game, discards, setDiscards }: {
           </div>
         </section>
         {rules.friendEnabled ? (
-          <section className="final-col">
+          <section className="final-col friend-col">
             <h4>프렌드</h4>
             <div className="friend-chips">
               {quick.map((q) => (
@@ -316,7 +316,7 @@ export function FinalPanel({ room, game, discards, setDiscards }: {
             </div>
           </section>
         ) : (
-          <section className="final-col">
+          <section className="final-col friend-col">
             <h4>프렌드</h4>
             <p className="hint">이 규칙은 프랜드가 없습니다</p>
           </section>
