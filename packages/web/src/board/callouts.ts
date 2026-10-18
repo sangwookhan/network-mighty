@@ -2,9 +2,10 @@
 
 import { JOKER, NO_SUIT, isKiruda, jokercallOf, mightyOf, powerOf, suitOf, type Card, type Rules, type Suit } from '@mighty/engine';
 
-export type Callout = '마이티' | '조커' | '조커콜' | '간' | '오버간' | `조커, ${string} 컴`;
+export type Callout = '마이티' | '조커' | '조커콜' | '간' | '오버간' | `${string}컴`;
 
-const SUIT_KO = ['', '스페이드', '다이아몬드', '하트', '클로버'];
+/** 조커로 부르는 무늬의 짧은 말 (기루다면 '기컴') */
+const SUIT_COME = ['', '스페이드', '다이아', '하트', '클로버'];
 
 interface TrickLike {
   cards: { card: Card }[];
@@ -22,8 +23,8 @@ export function calloutFor(trick: TrickLike, rules: Rules, kiruda: Suit): Callou
   const card = trick.cards[n - 1].card;
   const mighty = mightyOf(rules, kiruda);
   if (card === mighty) return '마이티';
-  // 조커로 선을 잡으면 부른 무늬까지: 기루다면 '기루다 컴'
-  if (card === JOKER) return n === 1 && trick.jokerSuit !== NO_SUIT ? `조커, ${trick.jokerSuit === kiruda ? '기루다' : SUIT_KO[trick.jokerSuit]} 컴` : '조커';
+  // 조커로 선을 잡고 무늬를 부르면 그 말: 기루다면 '기컴', 아니면 '하트컴' 등
+  if (card === JOKER) return n === 1 && trick.jokerSuit !== NO_SUIT ? `${trick.jokerSuit === kiruda ? '기' : SUIT_COME[trick.jokerSuit]}컴` : '조커';
   if (n === 1) return trick.jokercall && card === jokercallOf(rules, kiruda) ? '조커콜' : null;
   if (kiruda === NO_SUIT || !isKiruda(card, kiruda)) return null;
   const first = trick.cards[0].card;
