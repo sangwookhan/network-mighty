@@ -20,28 +20,22 @@ export function playCard(a: { kind: 'play'; card: Card; jokerSuit?: Suit; jokerc
 }
 
 /** 무늬별로 묶어 고정 자리를 정한다 (무늬 사이에 틈). 마이티·조커는 맨 앞 묶음 */
-const isRed = (s: Suit) => s === 2 || s === 3;
-
 /**
- * 내 패 정렬: 마이티·조커를 맨 왼쪽, 그다음 마이티와 같은 무늬(마이티가 없으면 ♠)부터
- * 검정·빨강이 번갈아 오도록 무늬를 놓는다 (예: ♠◆♣♥, ◆♠♥♣). 같은 무늬는 센 카드부터.
+ * 내 패 정렬: 조커, 마이티, 마이티와 같은 무늬, 그다음은 앞 무늬와 색이 다른 무늬 순.
+ * 마이티가 없으면 항상 ♠◆♣♥, 마이티가 ◆A면 ◆♠♥♣ (없는 무늬는 건너뜀). 같은 무늬는 센 카드부터.
  */
+const SUIT_ORDER: Record<Suit, Suit[]> = {
+  0: [1, 2, 4, 3],
+  1: [1, 2, 4, 3], // ♠◆♣♥
+  2: [2, 1, 3, 4], // ◆♠♥♣
+  3: [3, 1, 2, 4], // ♥♠◆♣
+  4: [4, 2, 1, 3], // ♣◆♠♥
+};
+
 export function handOrder(hand: readonly Card[], rules: RoomView['rules'], kiruda: Suit): Card[] {
   const mighty = mightyOf(rules, kiruda);
-  const hasMighty = hand.includes(mighty);
-  const present = new Set(hand.filter((c) => c !== mighty && c !== JOKER).map(suitOf));
-  const first: Suit = hasMighty ? suitOf(mighty) : 1;
-  // 있는 무늬만으로, 앞 무늬와 다른 색을 먼저 고른다 (♠◆♥♣ 순으로 우선)
-  const suits: Suit[] = [];
-  let rest = ([1, 2, 3, 4] as Suit[]).filter((s) => present.has(s));
-  if (rest.includes(first)) suits.push(first), (rest = rest.filter((s) => s !== first));
-  while (rest.length) {
-    const last = suits[suits.length - 1];
-    const pick = last === undefined ? rest[0] : (rest.find((s) => isRed(s) !== isRed(last)) ?? rest[0]);
-    suits.push(pick);
-    rest = rest.filter((s) => s !== pick);
-  }
-  const rank = (c: Card) => (c === mighty ? -2 : c === JOKER ? -1 : suits.indexOf(suitOf(c)) * 100 + (20 - powerOf(c)));
+  const suits = SUIT_ORDER[hand.includes(mighty) ? suitOf(mighty) : NO_SUIT];
+  const rank = (c: Card) => (c === JOKER ? -2 : c === mighty ? -1 : suits.indexOf(suitOf(c)) * 100 + (20 - powerOf(c)));
   return [...hand].sort((a, b) => rank(a) - rank(b));
 }
 
@@ -87,7 +81,7 @@ export function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards,
   let layout = layoutRef.current;
   if (!layout || layout.key !== layoutKey || game.myHand.some((c) => !layout!.order.includes(c))) {
     const before = layout;
-    // 마이티·조커 → 마이티 무늬부터 검정·빨강 번갈아 (기루다가 정해지면 그 판의 마이티 기준). 다시 배치할 때까지 유지
+    // 조커·마이티 → 마이티 무늬부터 검정·빨강 번갈아 (기루다가 정해지면 그 판의 마이티 기준). 다시 배치할 때까지 유지
     layout = { key: layoutKey, order: handOrder(game.myHand, rules, kiruda) };
     layoutRef.current = layout;
     if (group === 'final' && before?.key === `${game.dealNo}:deal`) {
