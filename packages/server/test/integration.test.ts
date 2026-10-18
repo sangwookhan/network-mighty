@@ -238,6 +238,14 @@ describe('통합: 사람 3명 + 봇', () => {
     hub.closeRoom(hub.rooms.get(roomId)!);
   });
 
+  it('봇 이름은 원작의 좌석별 기본 이름이다', async () => {
+    const { hub, a } = await setup(1);
+    a.send({ t: 'start' });
+    await until(() => a.room?.status === 'playing');
+    expect(a.room!.seats.filter((s) => s.occupant === 'bot').map((s) => s.nickname)).toEqual(['태우', '두환']);
+    hub.closeRoom(hub.rooms.get(a.room!.id)!);
+  });
+
   it('사람이 모두 나가면 방이 닫힌다', async () => {
     const { hub, a, b, c, roomId } = await setup(1);
     a.send({ t: 'start' });

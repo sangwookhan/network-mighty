@@ -18,6 +18,12 @@ export interface HubOptions {
 
 export const TURN_SECONDS_CHOICES = [0, 30, 60, 90, 120] as const;
 const START_MONEY = 100;
+/**
+ * 봇 이름: 원작 마이티 네트워크 3.2 의 좌석별 기본 이름 (Mighty.exe 0x4425f4 표).
+ * 원작은 0번(나)이 Windows 사용자 이름, 없으면 '아무개'.
+ */
+export const BOT_NAMES = ['아무개', '대중', '영삼', '태우', '두환', '정희'] as const;
+const botName = (seat: number) => BOT_NAMES[seat] ?? `봇${seat + 1}`;
 const MAX_CHAT = 100;
 
 export interface User {
@@ -231,7 +237,7 @@ export class Room implements GameHost {
 
   seatName(seat: number): string {
     const s = this.seats[seat];
-    return s.occupant === 'human' ? (this.user(s.userId)?.nickname ?? '?') : `봇${seat + 1}`;
+    return s.occupant === 'human' ? (this.user(s.userId)?.nickname ?? '?') : botName(seat);
   }
 
   systemChat(text: string): void {
@@ -494,7 +500,7 @@ export class Room implements GameHost {
         seat: i,
         occupant: s.occupant,
         playerId: s.userId,
-        nickname: s.occupant === 'human' ? (u?.nickname ?? '?') : s.occupant === 'bot' ? `봇${i + 1}` : null,
+        nickname: s.occupant === 'human' ? (u?.nickname ?? '?') : s.occupant === 'bot' ? botName(i) : null,
         connected: s.occupant === 'human' ? !!u?.conn : true,
         reserved: s.occupant === 'human' && !u?.conn,
         money: this.status === 'playing' ? this.moneyView[i] : s.money,
