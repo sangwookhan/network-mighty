@@ -1,0 +1,168 @@
+{
+ "id": "KBQwFA",
+ "name": "데모 방",
+ "hostId": "oFoLVMzN",
+ "presetId": 1,
+ "turnSeconds": 60,
+ "status": "waiting",
+ "paused": null,
+ "seats": [
+  {
+   "seat": 0,
+   "occupant": "human",
+   "playerId": "oFoLVMzN",
+   "nickname": "나",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 1,
+   "occupant": "bot",
+   "playerId": null,
+   "nickname": "대중",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 2,
+   "occupant": "bot",
+   "playerId": null,
+   "nickname": "영삼",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 3,
+   "occupant": "empty",
+   "playerId": null,
+   "nickname": null,
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 4,
+   "occupant": "empty",
+   "playerId": null,
+   "nickname": null,
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  }
+ ],
+ "spectators": [],
+ "me": {
+  "playerId": "oFoLVMzN",
+  "seat": 0,
+  "isHost": true
+ },
+ "game": null,
+ "rules": {
+  "players": 5,
+  "clockwise": true,
+  "baseGoal": 13,
+  "noKirudaGoalMinusOne": false,
+  "allowGoalOver20": false,
+  "friendDealsNext": false,
+  "dealerCanPassFirst": false,
+  "kirudaChangeRaise2": true,
+  "noKirudaChangeRaise1": false,
+  "friendEnabled": true,
+  "jokerFriendAllowed": true,
+  "discardsToOpposition": false,
+  "mightyFirstTurnPlayable": true,
+  "mightyFirstTurnEffective": true,
+  "mightyLastTurnPlayable": true,
+  "mightyLastTurnEffective": true,
+  "mightyAnswersJokercall": false,
+  "jokerFirstTurnPlayable": false,
+  "jokerFirstTurnEffective": false,
+  "jokerLastTurnPlayable": false,
+  "jokerLastTurnEffective": false,
+  "firstTurnKirudaFollower": true,
+  "firstTurnKirudaLeader": false,
+  "jokercallFirstTurn": true,
+  "jokercalledJokerEffective": false,
+  "dealMiss": {
+   "noPoints": true,
+   "allPoints": true,
+   "countMighty": true,
+   "countJoker": false,
+   "jokerDeductsOne": false,
+   "onlyTen": true,
+   "onlyOneEyedJack": false,
+   "onlyMighty": false
+  },
+  "scoreMethod": "risk",
+  "runBonus": "double",
+  "backRunDouble": false,
+  "noKirudaDouble": true,
+  "noFriendDouble": true,
+  "revealFriendOnScore": false,
+  "flipScoredCards": false,
+  "mighty": 1,
+  "altMighty": 14,
+  "jokercall": 42,
+  "altJokercall": 3
+ },
+ "preset": {
+  "id": 1,
+  "name": "표준 5마",
+  "summary": [
+   "5명",
+   "기본 공약 13 (최대 20)",
+   "프렌드 있음",
+   "점수법: 위험 보상",
+   "런은 2배",
+   "마이티 스페이드 A (기루다가 같은 무늬면 다이아몬드 A)",
+   "조커콜 클로버 3 (기루다가 같은 무늬면 스페이드 3)"
+  ],
+  "differences": [],
+  "comparedTo": null
+ },
+ "chat": [
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "나님이 들어왔습니다"
+  },
+  {
+   "at": 1792307274374,
+   "from": "나",
+   "text": "안녕하세요"
+  },
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "게임을 시작합니다. 빈자리는 봇이 채웠습니다"
+  },
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "1번째 판: 대중님부터 공약합니다"
+  },
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "나님이 들어왔습니다"
+  },
+  {
+   "at": 1792307274374,
+   "from": "나",
+   "text": "안녕하세요"
+  },
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "게임을 시작합니다. 빈자리는 봇이 채웠습니다"
+  },
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "1번째 판: 대중님부터 공약합니다"
+  }
+ ]
+}

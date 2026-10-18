@@ -5,6 +5,6 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react()],
   build: {
-    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), dev: resolve(__dirname, 'dev.html'), cards: resolve(__dirname, 'cards.html') } },
+    rollupOptions: { input: { main: resolve(__dirname, 'index.html'), dev: resolve(__dirname, 'dev.html'), cards: resolve(__dirname, 'cards.html'), boardDemo: resolve(__dirname, 'board-demo.html') } },
   },
 });

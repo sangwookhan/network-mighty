@@ -1,0 +1,414 @@
+{
+ "id": "KBQwFA",
+ "name": "데모 방",
+ "hostId": "oFoLVMzN",
+ "presetId": 1,
+ "turnSeconds": 60,
+ "status": "playing",
+ "paused": null,
+ "seats": [
+  {
+   "seat": 0,
+   "occupant": "human",
+   "playerId": "oFoLVMzN",
+   "nickname": "나",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 1,
+   "occupant": "bot",
+   "playerId": null,
+   "nickname": "대중",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 2,
+   "occupant": "bot",
+   "playerId": null,
+   "nickname": "영삼",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 3,
+   "occupant": "bot",
+   "playerId": null,
+   "nickname": "태우",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 4,
+   "occupant": "bot",
+   "playerId": null,
+   "nickname": "두환",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  }
+ ],
+ "spectators": [],
+ "me": {
+  "playerId": "oFoLVMzN",
+  "seat": 0,
+  "isHost": true
+ },
+ "game": {
+  "dealNo": 1,
+  "phase": "play",
+  "dealer": 1,
+  "active": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "killed": null,
+  "handCounts": [
+   8,
+   8,
+   8,
+   7,
+   7
+  ],
+  "myHand": [
+   5,
+   20,
+   27,
+   34,
+   33,
+   47,
+   35,
+   12
+  ],
+  "election": {
+   "n": 5,
+   "dealer": 1,
+   "current": 1,
+   "passed": [
+    false,
+    false,
+    true,
+    true,
+    true
+   ],
+   "best": {
+    "seat": 0,
+    "kiruda": 1,
+    "goal": 14
+   },
+   "log": [
+    {
+     "seat": 1,
+     "bid": {
+      "type": "bid",
+      "kiruda": 1,
+      "goal": 13
+     }
+    },
+    {
+     "seat": 2,
+     "bid": {
+      "type": "pass"
+     }
+    },
+    {
+     "seat": 3,
+     "bid": {
+      "type": "pass"
+     }
+    },
+    {
+     "seat": 4,
+     "bid": {
+      "type": "pass"
+     }
+    },
+    {
+     "seat": 0,
+     "bid": {
+      "type": "bid",
+      "kiruda": 1,
+      "goal": 14
+     }
+    },
+    {
+     "seat": 1,
+     "bid": {
+      "type": "pass"
+     }
+    }
+   ]
+  },
+  "master": 0,
+  "electedContract": {
+   "kiruda": 1,
+   "goal": 14
+  },
+  "contract": {
+   "kiruda": 1,
+   "goal": 14
+  },
+  "friendChoice": {
+   "kind": "card",
+   "card": 1
+  },
+  "friendSeat": null,
+  "myDiscards": [
+   19,
+   31,
+   44
+  ],
+  "turn": 2,
+  "trick": {
+   "leader": 3,
+   "cards": [
+    {
+     "seat": 3,
+     "card": 24
+    },
+    {
+     "seat": 4,
+     "card": 17
+    }
+   ],
+   "jokerSuit": 0,
+   "jokercall": false
+  },
+  "lastTrick": {
+   "cards": [
+    {
+     "seat": 1,
+     "card": 41
+    },
+    {
+     "seat": 2,
+     "card": 42
+    },
+    {
+     "seat": 3,
+     "card": 40
+    },
+    {
+     "seat": 4,
+     "card": 43
+    },
+    {
+     "seat": 0,
+     "card": 45
+    }
+   ],
+   "winner": 3
+  },
+  "history": [
+   {
+    "leader": 0,
+    "cards": [
+     {
+      "seat": 0,
+      "card": 37
+     },
+     {
+      "seat": 1,
+      "card": 14
+     },
+     {
+      "seat": 2,
+      "card": 38
+     },
+     {
+      "seat": 3,
+      "card": 29
+     },
+     {
+      "seat": 4,
+      "card": 28
+     }
+    ],
+    "jokerSuit": 0,
+    "jokercall": false,
+    "winner": 1
+   },
+   {
+    "leader": 1,
+    "cards": [
+     {
+      "seat": 1,
+      "card": 41
+     },
+     {
+      "seat": 2,
+      "card": 42
+     },
+     {
+      "seat": 3,
+      "card": 40
+     },
+     {
+      "seat": 4,
+      "card": 43
+     },
+     {
+      "seat": 0,
+      "card": 45
+     }
+    ],
+    "jokerSuit": 0,
+    "jokercall": false,
+    "winner": 3
+   }
+  ],
+  "taken": [
+   [],
+   [
+    37,
+    14,
+    38
+   ],
+   [],
+   [
+    40
+   ],
+   []
+  ],
+  "waitingFor": [
+   {
+    "seat": 0,
+    "kind": "play",
+    "remainingMs": 60000
+   }
+  ],
+  "myRequest": {
+   "kind": "play",
+   "legal": [
+    20
+   ],
+   "canJokercall": false,
+   "mustDeclareJokerSuit": false
+  },
+  "myRequestId": 20,
+  "result": null
+ },
+ "rules": {
+  "players": 5,
+  "clockwise": true,
+  "baseGoal": 13,
+  "noKirudaGoalMinusOne": false,
+  "allowGoalOver20": false,
+  "friendDealsNext": false,
+  "dealerCanPassFirst": false,
+  "kirudaChangeRaise2": true,
+  "noKirudaChangeRaise1": false,
+  "friendEnabled": true,
+  "jokerFriendAllowed": true,
+  "discardsToOpposition": false,
+  "mightyFirstTurnPlayable": true,
+  "mightyFirstTurnEffective": true,
+  "mightyLastTurnPlayable": true,
+  "mightyLastTurnEffective": true,
+  "mightyAnswersJokercall": false,
+  "jokerFirstTurnPlayable": false,
+  "jokerFirstTurnEffective": false,
+  "jokerLastTurnPlayable": false,
+  "jokerLastTurnEffective": false,
+  "firstTurnKirudaFollower": true,
+  "firstTurnKirudaLeader": false,
+  "jokercallFirstTurn": true,
+  "jokercalledJokerEffective": false,
+  "dealMiss": {
+   "noPoints": true,
+   "allPoints": true,
+   "countMighty": true,
+   "countJoker": false,
+   "jokerDeductsOne": false,
+   "onlyTen": true,
+   "onlyOneEyedJack": false,
+   "onlyMighty": false
+  },
+  "scoreMethod": "risk",
+  "runBonus": "double",
+  "backRunDouble": false,
+  "noKirudaDouble": true,
+  "noFriendDouble": true,
+  "revealFriendOnScore": false,
+  "flipScoredCards": false,
+  "mighty": 1,
+  "altMighty": 14,
+  "jokercall": 42,
+  "altJokercall": 3
+ },
+ "preset": {
+  "id": 1,
+  "name": "표준 5마",
+  "summary": [
+   "5명",
+   "기본 공약 13 (최대 20)",
+   "프렌드 있음",
+   "점수법: 위험 보상",
+   "런은 2배",
+   "마이티 스페이드 A (기루다가 같은 무늬면 다이아몬드 A)",
+   "조커콜 클로버 3 (기루다가 같은 무늬면 스페이드 3)"
+  ],
+  "differences": [],
+  "comparedTo": null
+ },
+ "chat": [
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "나님이 들어왔습니다"
+  },
+  {
+   "at": 1792307274374,
+   "from": "나",
+   "text": "안녕하세요"
+  },
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "게임을 시작합니다. 빈자리는 봇이 채웠습니다"
+  },
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "1번째 판: 대중님부터 공약합니다"
+  },
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "나님이 들어왔습니다"
+  },
+  {
+   "at": 1792307274374,
+   "from": "나",
+   "text": "안녕하세요"
+  },
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "게임을 시작합니다. 빈자리는 봇이 채웠습니다"
+  },
+  {
+   "at": 1792307274374,
+   "from": null,
+   "text": "1번째 판: 대중님부터 공약합니다"
+  },
+  {
+   "at": 1792307274377,
+   "from": null,
+   "text": "나님이 스페이드 14(으)로 당선"
+  },
+  {
+   "at": 1792307274377,
+   "from": null,
+   "text": "최종 공약: 스페이드 14, 프렌드: 스페이드 A"
+  }
+ ]
+}

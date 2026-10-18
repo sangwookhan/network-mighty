@@ -1,0 +1,316 @@
+{
+ "id": "cJyRHA",
+ "name": "데모 방",
+ "hostId": "q-O6USUu",
+ "presetId": 4,
+ "turnSeconds": 60,
+ "status": "playing",
+ "paused": null,
+ "seats": [
+  {
+   "seat": 0,
+   "occupant": "human",
+   "playerId": "q-O6USUu",
+   "nickname": "나",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 1,
+   "occupant": "bot",
+   "playerId": null,
+   "nickname": "대중",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 2,
+   "occupant": "bot",
+   "playerId": null,
+   "nickname": "영삼",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 3,
+   "occupant": "bot",
+   "playerId": null,
+   "nickname": "태우",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 4,
+   "occupant": "bot",
+   "playerId": null,
+   "nickname": "두환",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  },
+  {
+   "seat": 5,
+   "occupant": "bot",
+   "playerId": null,
+   "nickname": "정희",
+   "connected": true,
+   "reserved": false,
+   "money": 100
+  }
+ ],
+ "spectators": [],
+ "me": {
+  "playerId": "q-O6USUu",
+  "seat": 0,
+  "isHost": true
+ },
+ "game": {
+  "dealNo": 1,
+  "phase": "kill",
+  "dealer": 2,
+  "active": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "killed": null,
+  "handCounts": [
+   8,
+   8,
+   8,
+   8,
+   8,
+   8
+  ],
+  "myHand": [
+   50,
+   27,
+   38,
+   24,
+   36,
+   28,
+   37,
+   45
+  ],
+  "election": {
+   "n": 6,
+   "dealer": 2,
+   "current": 2,
+   "passed": [
+    false,
+    true,
+    false,
+    true,
+    true,
+    true
+   ],
+   "best": {
+    "seat": 0,
+    "kiruda": 1,
+    "goal": 14
+   },
+   "log": [
+    {
+     "seat": 2,
+     "bid": {
+      "type": "bid",
+      "kiruda": 3,
+      "goal": 13
+     }
+    },
+    {
+     "seat": 3,
+     "bid": {
+      "type": "pass"
+     }
+    },
+    {
+     "seat": 4,
+     "bid": {
+      "type": "pass"
+     }
+    },
+    {
+     "seat": 5,
+     "bid": {
+      "type": "pass"
+     }
+    },
+    {
+     "seat": 0,
+     "bid": {
+      "type": "bid",
+      "kiruda": 1,
+      "goal": 14
+     }
+    },
+    {
+     "seat": 1,
+     "bid": {
+      "type": "pass"
+     }
+    },
+    {
+     "seat": 2,
+     "bid": {
+      "type": "pass"
+     }
+    }
+   ]
+  },
+  "master": 0,
+  "electedContract": {
+   "kiruda": 1,
+   "goal": 14
+  },
+  "contract": {
+   "kiruda": 1,
+   "goal": 14
+  },
+  "friendChoice": null,
+  "friendSeat": null,
+  "myDiscards": [],
+  "turn": 0,
+  "trick": null,
+  "lastTrick": null,
+  "history": [],
+  "taken": [
+   [],
+   [],
+   [],
+   [],
+   [],
+   []
+  ],
+  "waitingFor": [
+   {
+    "seat": 0,
+    "kind": "kill",
+    "remainingMs": 60000
+   }
+  ],
+  "myRequest": {
+   "kind": "kill",
+   "failed": []
+  },
+  "myRequestId": 8,
+  "result": null
+ },
+ "rules": {
+  "players": 6,
+  "clockwise": true,
+  "baseGoal": 13,
+  "noKirudaGoalMinusOne": false,
+  "allowGoalOver20": false,
+  "friendDealsNext": false,
+  "dealerCanPassFirst": true,
+  "kirudaChangeRaise2": true,
+  "noKirudaChangeRaise1": false,
+  "friendEnabled": true,
+  "jokerFriendAllowed": true,
+  "discardsToOpposition": false,
+  "mightyFirstTurnPlayable": true,
+  "mightyFirstTurnEffective": true,
+  "mightyLastTurnPlayable": true,
+  "mightyLastTurnEffective": true,
+  "mightyAnswersJokercall": false,
+  "jokerFirstTurnPlayable": false,
+  "jokerFirstTurnEffective": false,
+  "jokerLastTurnPlayable": false,
+  "jokerLastTurnEffective": false,
+  "firstTurnKirudaFollower": true,
+  "firstTurnKirudaLeader": false,
+  "jokercallFirstTurn": true,
+  "jokercalledJokerEffective": false,
+  "dealMiss": {
+   "noPoints": true,
+   "allPoints": true,
+   "countMighty": true,
+   "countJoker": false,
+   "jokerDeductsOne": false,
+   "onlyTen": true,
+   "onlyOneEyedJack": false,
+   "onlyMighty": false
+  },
+  "scoreMethod": "risk",
+  "runBonus": "double",
+  "backRunDouble": false,
+  "noKirudaDouble": true,
+  "noFriendDouble": true,
+  "revealFriendOnScore": false,
+  "flipScoredCards": false,
+  "mighty": 1,
+  "altMighty": 14,
+  "jokercall": 42,
+  "altJokercall": 3
+ },
+ "preset": {
+  "id": 4,
+  "name": "표준 6마",
+  "summary": [
+   "6명 (당선 후 1명 탈락)",
+   "기본 공약 13 (최대 20)",
+   "프렌드 있음",
+   "점수법: 위험 보상",
+   "런은 2배",
+   "마이티 스페이드 A (기루다가 같은 무늬면 다이아몬드 A)",
+   "조커콜 클로버 3 (기루다가 같은 무늬면 스페이드 3)"
+  ],
+  "differences": [],
+  "comparedTo": null
+ },
+ "chat": [
+  {
+   "at": 1792307274694,
+   "from": null,
+   "text": "나님이 들어왔습니다"
+  },
+  {
+   "at": 1792307274694,
+   "from": "나",
+   "text": "안녕하세요"
+  },
+  {
+   "at": 1792307274694,
+   "from": null,
+   "text": "게임을 시작합니다. 빈자리는 봇이 채웠습니다"
+  },
+  {
+   "at": 1792307274694,
+   "from": null,
+   "text": "1번째 판: 영삼님부터 공약합니다"
+  },
+  {
+   "at": 1792307274694,
+   "from": null,
+   "text": "나님이 들어왔습니다"
+  },
+  {
+   "at": 1792307274694,
+   "from": "나",
+   "text": "안녕하세요"
+  },
+  {
+   "at": 1792307274694,
+   "from": null,
+   "text": "게임을 시작합니다. 빈자리는 봇이 채웠습니다"
+  },
+  {
+   "at": 1792307274694,
+   "from": null,
+   "text": "1번째 판: 영삼님부터 공약합니다"
+  },
+  {
+   "at": 1792307274695,
+   "from": null,
+   "text": "나님이 스페이드 14(으)로 당선"
+  }
+ ]
+}
