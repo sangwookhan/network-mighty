@@ -393,6 +393,25 @@ describe('통합: 사람 3명 + 봇', () => {
     hub.closeRoom(hub.rooms.get(roomId)!);
   });
 
+  it('게임 중에도 내 이름을 바꿀 수 있다 (자리·채팅에 반영, 겹치는 이름은 거절)', async () => {
+    const { hub, a, b } = await setup(1);
+    a.autoPlay = b.autoPlay = false;
+    a.send({ t: 'start' });
+    await until(() => a.room?.status === 'playing');
+    const mySeat = () => a.room!.seats.find((s) => s.playerId === a.playerId)!;
+    expect(mySeat().nickname).toBe('가');
+    a.send({ t: 'rename', nickname: '가나다' });
+    await until(() => mySeat().nickname === '가나다' && b.room!.seats.some((s) => s.nickname === '가나다'));
+    expect(a.room!.chat.at(-1)?.text).toBe('가님이 이름을 가나다로 바꿨습니다');
+    // 다른 사람이 쓰는 이름은 안 된다
+    const before = a.errors.length;
+    a.send({ t: 'rename', nickname: '나' });
+    await until(() => a.errors.length > before);
+    expect(a.errors.at(-1)).toContain('이미 쓰고 있는');
+    expect(mySeat().nickname).toBe('가나다');
+    hub.closeRoom(hub.rooms.get(a.room!.id)!);
+  });
+
   it('프로토콜 버전이 다르면 접속을 거절한다', async () => {
     const hub = new Hub({ timing: FAST });
     const got: ServerMessage[] = [];

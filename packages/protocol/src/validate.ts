@@ -87,6 +87,8 @@ export function parseClientMessage(m: unknown): ClientMessage | null {
         return optInt(m.presetId, 1, 99) && optInt(m.turnSeconds, 0, 3600) && optLevel(m.botLevel);
       case 'chat':
         return isStr(m.text, 1000);
+      case 'rename':
+        return isStr(m.nickname, 40);
       case 'pause':
         return typeof m.paused === 'boolean';
       case 'action':

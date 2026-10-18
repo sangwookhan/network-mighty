@@ -103,6 +103,10 @@ function receive(m: ServerMessage) {
       wantNewNickname = false;
       set({ me: { playerId: m.playerId, nickname: m.nickname }, needNickname: null, choose: null, replaced: null });
       break;
+    case 'renamed':
+      if (tab.token) last.save(tab.token, m.nickname);
+      if (state.me) set({ me: { ...state.me, nickname: m.nickname } });
+      break;
     case 'needNickname':
       // 서버가 재시작되어 토큰을 모르면 닉네임을 다시 받는다 (마지막 닉네임을 미리 채워 둠)
       if (tab.token && tab.token === last.token) last.forgetToken();
@@ -159,6 +163,13 @@ export function takeBack() {
 }
 
 /** 지금 받은 요청에 응답한다 */
+/** 내 이름 바꾸기: 새 이름을 물어 서버에 보낸다 (안 되면 서버가 이유를 알려 줌) */
+export function askRename() {
+  const now = state.me?.nickname ?? '';
+  const next = prompt('새 이름 (12자까지)', now)?.trim();
+  if (next && next !== now) send({ t: 'rename', nickname: next });
+}
+
 export function act(action: GameAction) {
   const id = state.room?.game?.myRequestId;
   if (id == null) return;

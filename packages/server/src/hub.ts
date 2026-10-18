@@ -30,6 +30,11 @@ const iGa = (name: string) => {
   const c = name.charCodeAt(name.length - 1) - 0xac00;
   return c >= 0 && c < 11172 && c % 28 !== 0 ? '이' : '가';
 };
+/** 이름 뒤 '(으)로' (받침이 있으면 '으로', 없거나 ㄹ 받침이면 '로') */
+const euro = (name: string) => {
+  const c = name.charCodeAt(name.length - 1) - 0xac00;
+  return c >= 0 && c < 11172 && c % 28 !== 0 && c % 28 !== 8 ? '으로' : '로';
+};
 const MAX_CHAT = 100;
 /** 대기실·관전 중에 창을 닫았다가 이 안에 다시 접속하면 그 방으로 돌아간다 (새로고침 대비) */
 const REJOIN_MS = 30_000;
@@ -100,12 +105,9 @@ export class Hub {
         conn.send({ t: 'needNickname' });
         return null;
       }
-      if (nickname.length > 12) {
-        conn.send({ t: 'needNickname', reason: '닉네임은 12자까지입니다' });
-        return null;
-      }
-      if ([...this.users.values()].some((u) => u.nickname === nickname)) {
-        conn.send({ t: 'needNickname', reason: '이미 쓰고 있는 닉네임입니다' });
+      const bad = this.nicknameError(nickname);
+      if (bad) {
+        conn.send({ t: 'needNickname', reason: bad });
         return null;
       }
       user = { id: newId(), token: newId(18), nickname, conn: null, roomId: null };
@@ -149,6 +151,14 @@ export class Hub {
     this.broadcastLobby();
   }
 
+  /** 닉네임으로 쓸 수 없으면 그 이유 (처음 접속·이름 바꾸기 공통) */
+  private nicknameError(nickname: string): string | null {
+    if (!nickname) return '닉네임을 입력하세요';
+    if (nickname.length > 12) return '닉네임은 12자까지입니다';
+    if ([...this.users.values()].some((u) => u.nickname === nickname)) return '이미 쓰고 있는 닉네임입니다';
+    return null;
+  }
+
   // ---- 메시지 ----
 
   private handle(user: User, msg: ClientMessage): void {
@@ -176,6 +186,19 @@ export class Hub {
       case 'chat':
         if (room) room.chatFrom(user, String(msg.text ?? ''));
         return;
+      case 'rename': {
+        // 이름은 보낼 때마다 id 로 찾아 쓰므로 여기서 바꾸면 자리·관전자·게임 안내에 모두 반영된다
+        const nickname = msg.nickname.trim();
+        if (nickname === user.nickname) return;
+        const bad = this.nicknameError(nickname);
+        if (bad) return err(bad);
+        const old = user.nickname;
+        user.nickname = nickname;
+        user.conn?.send({ t: 'renamed', nickname });
+        room?.renamed(user, old);
+        this.broadcastLobby();
+        return;
+      }
       default:
         if (!room) return err('방에 있지 않습니다');
         const e = room.handle(user, msg);
@@ -328,6 +351,12 @@ export class Room implements GameHost {
       this.systemChat(`${user.nickname}님의 연결이 끊겼습니다. 돌아올 때까지 봇이 대신 칩니다`);
       this.game?.occupantChanged(seat);
     }
+    this.changed();
+  }
+
+  renamed(user: User, old: string): void {
+    if (this.pausedBy === old) this.pausedBy = user.nickname;
+    this.systemChat(`${old}님이 이름을 ${user.nickname}${euro(user.nickname)} 바꿨습니다`);
     this.changed();
   }
 

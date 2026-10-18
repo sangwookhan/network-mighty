@@ -29,6 +29,8 @@ export type ClientMessage =
   | { t: 'removeBot'; seat: number }
   | { t: 'kick'; playerId: string }
   | { t: 'setRoom'; presetId?: number; turnSeconds?: number; botLevel?: BotLevel }
+  /** 내 이름 바꾸기 (로비·대기실·게임 중 언제나) */
+  | { t: 'rename'; nickname: string }
   | { t: 'start' }
   /** 게임 일시정지/다시 시작 (자리에 앉은 사람 누구나) */
   | { t: 'pause'; paused: boolean }
@@ -47,6 +49,8 @@ export type GameAction =
 
 export type ServerMessage =
   | { t: 'welcome'; token: string; playerId: string; nickname: string }
+  /** 이름을 바꿨다 (요청한 사람에게) */
+  | { t: 'renamed'; nickname: string }
   | { t: 'needNickname'; reason?: string }
   | { t: 'lobby'; rooms: RoomSummary[]; online: number }
   /** 방 상태 (바뀔 때마다). 규칙·프리셋 설명·채팅은 빠져 있다 → 화면이 roomStatic, chat 과 합친다 */

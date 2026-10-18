@@ -21,7 +21,7 @@ const RULES: Rule[] = [
   [/^(.+)님이 들어왔습니다 \(관전\)$/, 'room', (m) => `${m[1]}님이 관전하러 입장했습니다`],
   [/^(.+)님이 들어왔습니다$/, 'room', (m) => `${m[1]}님이 입장했습니다`],
   [/^(.+)님이 연결이 끊겨 퇴장했습니다$/, 'room', (m) => `${m[1]}님이 퇴장했습니다`],
-  [/나갔습니다|퇴장했습니다|관전합니다|자리에 앉았습니다|넘겨받았습니다|연결이 끊겼습니다|돌아왔습니다|방장이 되었습니다|내보냈습니다|일시정지했습니다|다시 시작했습니다|제한 시간을|봇 수준을/, 'room', (m) => m.input.split('. ')[0]],
+  [/나갔습니다|퇴장했습니다|관전합니다|자리에 앉았습니다|넘겨받았습니다|연결이 끊겼습니다|돌아왔습니다|방장이 되었습니다|내보냈습니다|일시정지했습니다|다시 시작했습니다|제한 시간을|봇 수준을|이름을 .+ 바꿨습니다/, 'room', (m) => m.input.split('. ')[0]],
 ];
 
 export function voiceForSystemLine(text: string, myName?: string): { kind: VoiceKind; text: string } | null {
@@ -30,6 +30,8 @@ export function voiceForSystemLine(text: string, myName?: string): { kind: Voice
     if (!m) continue;
     // 내가 한 방 소식은 읽지 않는다 (내가 방장이 된 것은 알려 준다)
     // (일시정지·다시 시작은 모두에게 영향이 있어 내가 했어도 알린다)
+    // 내가 이름을 바꾼 것도 읽지 않는다 (바뀐 이름이 내 이름)
+    if (kind === 'room' && myName && text.includes(`이름을 ${myName}`)) return null;
     if (kind === 'room' && myName && text.startsWith(`${myName}님`) && !/방장이 되었습니다|일시정지했습니다|다시 시작했습니다/.test(text)) return null;
     return { kind, text: say(m) };
   }

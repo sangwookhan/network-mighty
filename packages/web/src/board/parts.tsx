@@ -1,5 +1,6 @@
 // 자리 주변의 작은 표시들: 이름표, 딴 점수카드, 공약 말풍선, 무늬 아이콘, 남은 시간
 
+import { askRename } from '../net.js';
 import { NO_SUIT, type Bid } from '@mighty/engine';
 import type { GameView, RoomView, SeatView } from '@mighty/protocol';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -31,8 +32,13 @@ export function NameTag({ room, game, seat }: { room: RoomView; game: GameView; 
   const waiting = game.waitingFor.find((x) => x.seat === seat.seat && x.kind !== 'continue');
   // 원작: 여당(주공, 공개된 프렌드) 이름은 하늘색
   const defender = seat.seat === game.master || seat.seat === game.friendSeat;
+  const mine = seat.playerId !== null && seat.playerId === room.me.playerId;
   return (
-    <div className={`name-tag ${waiting ? 'turn' : ''} ${defender ? 'defender' : ''}`}>
+    <div
+      className={`name-tag ${waiting ? 'turn' : ''} ${defender ? 'defender' : ''} ${mine ? 'mine' : ''}`}
+      onClick={mine ? askRename : undefined}
+      title={mine ? '눌러서 내 이름 바꾸기' : undefined}
+    >
       <span className="nick">
         {seat.nickname}
         {seat.occupant === 'bot' && ' 🤖'}

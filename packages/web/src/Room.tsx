@@ -2,7 +2,7 @@ import type { RoomView } from '@mighty/protocol';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Board } from './board/Board.js';
 import { BotLevelSelect, PresetInfo, PresetSelect, TURN_CHOICES, TurnSelect, botLevelName } from './Lobby.js';
-import { send, useNet } from './net.js';
+import { askRename, send, useNet } from './net.js';
 import { SoundMenu } from './SoundMenu.js';
 import { play as sfx } from './sound.js';
 import { speak } from './voice.js';
@@ -106,7 +106,11 @@ function WaitingRoom({ room }: { room: RoomView }) {
             <div key={s.seat} className={`seat-card ${s.occupant} ${s.playerId === room.me.playerId ? 'me' : ''}`} data-seat={s.seat}>
               <div className="seat-no">{s.seat + 1}</div>
               <div className="seat-avatar">{s.occupant === 'human' ? '🙂' : s.occupant === 'bot' ? '🤖' : ''}</div>
-              <div className="seat-name">
+              <div
+                className={`seat-name ${s.playerId === room.me.playerId ? 'mine' : ''}`}
+                onClick={s.playerId === room.me.playerId ? askRename : undefined}
+                title={s.playerId === room.me.playerId ? '눌러서 내 이름 바꾸기' : undefined}
+              >
                 {s.occupant === 'empty' ? '빈자리' : s.nickname}
                 {s.playerId === room.hostId && <span className="crown"> 👑</span>}
               </div>
