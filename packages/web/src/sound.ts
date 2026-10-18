@@ -158,6 +158,18 @@ export const CARD_SOUNDS: { id: string; name: string; desc: string; make: (a: Au
     make: (a) => (burst(a, 0, 0.06, 0.9, 'lowpass', 700), tone(a, 95, 0, 0.09, 'sine', 0.25)),
   },
   {
+    id: 'tap-light-1', name: '2-1. 탁 (조금 가볍게)', desc: '2번에서 쿵 소리를 줄이고 조금 높게',
+    make: (a) => (burst(a, 0, 0.045, 0.75, 'lowpass', 1300), tone(a, 150, 0, 0.06, 'sine', 0.12)),
+  },
+  {
+    id: 'tap-light-2', name: '2-2. 탁 (가볍게)', desc: '쿵 없이 카드 끝이 펠트에 닿는 소리',
+    make: (a) => (burst(a, 0, 0.035, 0.7, 'bandpass', 1800, 0.8), tone(a, 220, 0, 0.04, 'triangle', 0.07)),
+  },
+  {
+    id: 'tap-light-3', name: '2-3. 톡 (아주 가볍게)', desc: '짧고 가벼운 톡',
+    make: (a) => (burst(a, 0, 0.025, 0.6, 'bandpass', 2400, 1), tone(a, 320, 0, 0.03, 'sine', 0.06)),
+  },
+  {
     id: 'snap', name: '3. 딱 (카드 튕기기)', desc: '짧고 또렷한 고음 클릭',
     make: (a) => (burst(a, 0, 0.025, 1.2, 'bandpass', 3200, 2), tone(a, 1800, 0, 0.03, 'square', 0.04)),
   },
@@ -179,7 +191,7 @@ export const CARD_SOUNDS: { id: string; name: string; desc: string; make: (a: Au
   },
 ];
 
-let cardSound = 'swish-tock';
+let cardSound = 'tap-light-2';
 /** 카드 내는 소리 바꾸기 (들어 보기 페이지용, 고른 뒤에는 기본값을 바꾼다) */
 export function setCardSound(id: string) {
   if (CARD_SOUNDS.some((c) => c.id === id)) cardSound = id;
