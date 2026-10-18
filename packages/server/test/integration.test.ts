@@ -412,6 +412,18 @@ describe('통합: 사람 3명 + 봇', () => {
     hub.closeRoom(hub.rooms.get(a.room!.id)!);
   });
 
+  it('판이 끝나고 그만하기를 고르면 다른 사람이 아직 고르지 않았어도 바로 알린다', async () => {
+    const { hub, a, b, c } = await setup(1);
+    b.stopAfterDeal = 0; // 첫 판 끝에 그만
+    a.send({ t: 'start' });
+    // 결과가 나오면 c 는 고르지 않고 기다린다
+    await until(() => c.room?.game?.phase === 'result', 30_000);
+    c.autoPlay = false;
+    await until(() => !!a.room?.chat.some((l) => l.text === '나님이 그만합니다. 다음 판부터 봇이 맡습니다'), 10_000);
+    expect(a.room!.game!.result!.continueVotes.filter((v) => v === null).length).toBeGreaterThan(0);
+    hub.closeRoom(hub.rooms.get(a.room!.id)!);
+  }, 40_000);
+
   it('프로토콜 버전이 다르면 접속을 거절한다', async () => {
     const hub = new Hub({ timing: FAST });
     const got: ServerMessage[] = [];

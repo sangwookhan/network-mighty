@@ -297,10 +297,7 @@ export class Room implements GameHost {
       if (s.occupant !== 'human') continue;
       const u = this.user(s.userId);
       this.toBot(seat);
-      if (u) {
-        this.spectators.add(u.id);
-        this.systemChat(`${u.nickname}님이 그만두고 관전합니다. 자리는 봇이 맡습니다`);
-      }
+      if (u) this.spectators.add(u.id); // 안내는 그만하기를 고른 순간에 이미 했다 (Game)
     }
     this.changed();
   }

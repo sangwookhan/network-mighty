@@ -562,6 +562,8 @@ export class Game {
         const a = await this.ask(seat, { kind: 'continue' }, (x) => x.kind === 'continue' && typeof x.cont === 'boolean');
         const cont = a.kind === 'continue' ? a.cont : true;
         this.result!.continueVotes[seat] = cont;
+        // 그만하기는 다른 사람들이 다 고를 때까지 기다리지 않고 바로 알린다 (자리는 모두 고른 뒤 봇에게)
+        if (!cont) this.host.systemChat(`${this.host.seatName(seat)}님이 그만합니다. 다음 판부터 봇이 맡습니다`);
         this.host.changed();
         return cont;
       }),
