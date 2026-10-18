@@ -10,6 +10,7 @@ import {
   isValidFriend,
   makeCard,
   mightyOf,
+  minFinalGoal,
   powerOf,
   suitOf,
   type Bid,
@@ -163,7 +164,8 @@ export function FinalPanel({ room, game, discards }: { room: RoomView; game: Gam
   const friendOk =
     discards.length === 3 &&
     isValidFriend(engineFriend, { rules, n: game.active.length, master: game.active.indexOf(game.master!), masterHand, discards });
-  const { min, max } = goalRange(rules, kiruda);
+  const { max } = goalRange(rules, kiruda);
+  const min = minFinalGoal(elected, kiruda, rules);
 
   // 원작 프렌드 상자의 빠른 선택 (마이티/조커/기루다A/K/초구/노 프랜드)
   const k = kiruda;
@@ -200,7 +202,14 @@ export function FinalPanel({ room, game, discards }: { room: RoomView; game: Gam
         지금 기루다와 목표 점수를 바꿀 수 있습니다 <span className="hint">(당선: {contractText(elected.kiruda, elected.goal)})</span>
       </p>
       <div className="row">
-        <SuitButtons value={kiruda} onChange={setKiruda} />
+        <SuitButtons
+          value={kiruda}
+          onChange={(k) => {
+            // 기루다를 바꾸면 규칙상 최소 공약으로, 원래 기루다로 돌아오면 당선 공약으로
+            setKiruda(k);
+            setGoal(minFinalGoal(elected, k, rules));
+          }}
+        />
         <span className="stepper">
           <button disabled={goal <= min} onClick={() => setGoal(goal - 1)} aria-label="낮추기">
             ▽

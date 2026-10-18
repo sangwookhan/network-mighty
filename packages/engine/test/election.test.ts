@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   HEART, JOKER, NO_SUIT, SPADE,
-  applyBid, isDealMiss, isValidBid, isValidFinalContract, isValidFriend, presetRules, resolveFriend, startElection,
+  applyBid, isDealMiss, isValidBid, isValidFinalContract, isValidFriend, minFinalGoal, presetRules, resolveFriend, startElection,
   type Bid, type ElectionResult, type ElectionState, type Rules,
 } from '../src/index.js';
 import { C, Cs } from './helpers.js';
@@ -121,6 +121,12 @@ describe('당선 후 최종 공약', () => {
   });
   it('최대 점수에서 잘린다', () => {
     expect(isValidFinalContract({ kiruda: SPADE, goal: 19 }, { kiruda: HEART, goal: 20 }, std)).toBe(true);
+  });
+  it('기루다별 최소 공약 (자동 올림/원복용)', () => {
+    expect(minFinalGoal(el, SPADE, std)).toBe(14);
+    expect(minFinalGoal(el, HEART, std)).toBe(16);
+    expect(minFinalGoal(el, NO_SUIT, presetRules(5))).toBe(15);
+    expect(minFinalGoal({ kiruda: SPADE, goal: 19 }, HEART, std)).toBe(20);
   });
 });
 

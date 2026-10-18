@@ -117,11 +117,17 @@ const pick = (c: Contract): Contract => ({ kiruda: c.kiruda, goal: c.goal });
  * 수정: 원작은 손패 장수에 따라 +2/+1이 달라졌다 (13장일 때 +2, 버린 뒤 +1). 옵션대로 항상 +2.
  */
 export function isValidFinalContract(elected: Contract, next: Contract, rules: Rules): boolean {
-  const { min, max } = goalRange(rules, next.kiruda);
-  if (!Number.isInteger(next.goal) || next.goal < min || next.goal > max) return false;
-  if (next.kiruda === elected.kiruda) return next.goal >= elected.goal;
+  const { max } = goalRange(rules, next.kiruda);
+  if (!Number.isInteger(next.goal) || next.goal > max) return false;
+  return next.goal >= minFinalGoal(elected, next.kiruda, rules);
+}
+
+/** 최종 공약을 kiruda 로 정할 때 허용되는 가장 낮은 목표 점수 (isValidFinalContract 의 하한) */
+export function minFinalGoal(elected: Contract, kiruda: Suit, rules: Rules): number {
+  const { min, max } = goalRange(rules, kiruda);
+  if (kiruda === elected.kiruda) return Math.max(min, elected.goal);
   let raise = 1;
-  if (rules.noKirudaChangeRaise1 && (elected.kiruda === NO_SUIT || next.kiruda === NO_SUIT)) raise = 1;
+  if (rules.noKirudaChangeRaise1 && (elected.kiruda === NO_SUIT || kiruda === NO_SUIT)) raise = 1;
   else if (rules.kirudaChangeRaise2) raise = 2;
-  return next.goal >= Math.min(elected.goal + raise, max);
+  return Math.max(min, Math.min(elected.goal + raise, max));
 }
