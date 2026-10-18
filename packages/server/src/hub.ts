@@ -24,6 +24,11 @@ const START_MONEY = 100;
  */
 export const BOT_NAMES = ['아무개', '대중', '영삼', '태우', '두환', '정희'] as const;
 const botName = (seat: number) => BOT_NAMES[seat] ?? `봇${seat + 1}`;
+/** 이름 뒤 '이/가' (마지막 글자에 받침이 있으면 '이') */
+const iGa = (name: string) => {
+  const c = name.charCodeAt(name.length - 1) - 0xac00;
+  return c >= 0 && c < 11172 && c % 28 !== 0 ? '이' : '가';
+};
 const MAX_CHAT = 100;
 
 export interface User {
@@ -332,6 +337,7 @@ export class Room implements GameHost {
         if (this.status === 'playing') this.toBot(seat);
         else this.seats[seat] = { occupant: 'empty', userId: null, money: START_MONEY };
         this.spectators.add(user.id);
+        this.systemChat(`${user.nickname}님이 일어나 관전합니다${this.status === 'playing' ? '. 자리는 봇이 맡습니다' : ''}`);
         this.changed();
         return null;
       }
@@ -344,6 +350,7 @@ export class Room implements GameHost {
         if (msg.t === 'addBot' && s.occupant !== 'empty') return '빈자리가 아닙니다';
         if (msg.t === 'removeBot' && s.occupant !== 'bot') return '봇 자리가 아닙니다';
         this.seats[msg.seat] = { occupant: msg.t === 'addBot' ? 'bot' : 'empty', userId: null, money: START_MONEY };
+        this.systemChat(msg.t === 'addBot' ? `봇 ${botName(msg.seat)}${iGa(botName(msg.seat))} ${msg.seat + 1}번 자리에 앉았습니다` : `봇 ${botName(msg.seat)}${iGa(botName(msg.seat))} 나갔습니다`);
         this.changed();
         return null;
       }
@@ -412,7 +419,7 @@ export class Room implements GameHost {
     if (this.status === 'playing' && s.occupant !== 'bot') return '봇 자리만 넘겨받을 수 있습니다';
     this.spectators.delete(user.id);
     this.seatHuman(seat, user);
-    if (this.status === 'playing') this.systemChat(`${user.nickname}님이 ${seat + 1}번 자리를 넘겨받았습니다`);
+    this.systemChat(this.status === 'playing' ? `${user.nickname}님이 ${seat + 1}번 자리를 넘겨받았습니다` : `${user.nickname}님이 ${seat + 1}번 자리에 앉았습니다`);
     this.game?.occupantChanged(seat);
     this.changed();
     this.hub.broadcastLobby();

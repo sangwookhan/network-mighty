@@ -6,7 +6,7 @@ import { send, useNet } from './net.js';
 import { say } from './sound.js';
 
 export function RoomScreen({ room }: { room: RoomView }) {
-  useJoinVoice(room);
+  useRoomNewsVoice(room);
   const [showChat, setShowChat] = useState(() => window.innerWidth > 900);
   const [showScore, setShowScore] = useState(() => window.innerWidth > 900);
   const playing = room.status === 'playing' && room.game;
@@ -144,11 +144,26 @@ function WaitingRoom({ room }: { room: RoomView }) {
   );
 }
 
+/** 사람·방 소식은 배경 음악을 덮지 않게 외침(0.9)보다 작게 읽는다 */
+const ROOM_NEWS_VOLUME = 0.45;
+
+/** 사람·방 소식으로 읽을 시스템 줄 (게임 진행 줄은 효과음·외침이 따로 있어서 읽지 않는다) */
+const ROOM_NEWS = /들어왔습니다|나갔습니다|관전합니다|자리에 앉았습니다|넘겨받았습니다|연결이 끊겼습니다|돌아왔습니다|방장이 되었습니다|내보냈습니다|일시정지했습니다|다시 시작했습니다|제한 시간을|게임을 시작합니다/;
+
+/** 시스템 줄 → 읽을 말 (첫 문장만, '들어왔습니다'는 '입장했습니다'로). 읽지 않을 줄이면 null */
+export function roomNewsVoice(text: string, myName?: string): string | null {
+  if (!ROOM_NEWS.test(text)) return null;
+  // 내가 한 일은 읽지 않는다 (내가 방장이 된 것은 알려 준다)
+  if (myName && text.startsWith(`${myName}님`) && !text.includes('방장이 되었습니다')) return null;
+  const first = text.split('. ')[0];
+  return first.replace(/님이 들어왔습니다 \(관전\)$/, '님이 관전하러 입장했습니다').replace(/님이 들어왔습니다$/, '님이 입장했습니다');
+}
+
 /**
- * 누가 들어오면 '○○님이 입장했습니다'를 음성으로 읽는다 (소리 끔이면 조용히).
- * 방에 들어올 때 받은 지난 대화는 읽지 않고, 그 뒤에 새로 온 시스템 줄만 본다. 내가 들어온 것은 읽지 않는다.
+ * 입장·나가기·일어나기·관전·자리 넘겨받기·연결 끊김 등 사람과 방 소식을 음성으로 읽는다 (소리 끔이면 조용히).
+ * 방에 들어올 때 받은 지난 대화는 읽지 않고, 그 뒤에 새로 온 시스템 줄만 본다.
  */
-function useJoinVoice(room: RoomView) {
+function useRoomNewsVoice(room: RoomView) {
   const myName = useNet().me?.nickname;
   const last = useRef<{ at: number; text: string } | null | undefined>(undefined);
   useEffect(() => {
@@ -161,8 +176,8 @@ function useJoinVoice(room: RoomView) {
     if (prev) for (let j = lines.length - 1; j >= 0; j--) if (lines[j].at === prev.at && lines[j].text === prev.text) { k = j; break; }
     const fresh = prev && k < 0 ? lines.filter((l) => l.at > prev.at) : lines.slice(k + 1);
     for (const l of fresh) {
-      const m = l.from === null ? /^(.+)님이 들어왔습니다/.exec(l.text) : null;
-      if (m && m[1] !== myName) say(`${m[1]}님이 입장했습니다`);
+      const v = l.from === null ? roomNewsVoice(l.text, myName) : null;
+      if (v) say(v, ROOM_NEWS_VOLUME);
     }
   }, [room.chat, myName]);
 }

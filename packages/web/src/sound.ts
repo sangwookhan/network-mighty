@@ -131,7 +131,7 @@ export function play(name: SoundName) {
  * 짧은 말(마이티!, 조커! …)을 브라우저 음성 합성으로 읽는다. 소리 끔이면 아무것도 안 한다.
  * 한국어 목소리가 없는 기기에서는 기본 목소리로 읽는다.
  */
-export function say(text: string) {
+export function say(text: string, volume = 0.9) {
   if (!enabled || typeof speechSynthesis === 'undefined') return;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'ko-KR';
@@ -139,8 +139,9 @@ export function say(text: string) {
   if (ko) u.voice = ko;
   u.rate = 1;
   u.pitch = 1.1;
-  u.volume = 0.9;
-  speechSynthesis.cancel(); // 앞의 말이 밀리지 않게
+  u.volume = volume;
+  // 말하는 중인 것 뒤에 이미 기다리는 말이 있으면 밀린 것을 버리고 새 말부터 (두 개까지는 차례로 읽는다)
+  if (speechSynthesis.pending) speechSynthesis.cancel();
   speechSynthesis.speak(u);
 }
 
