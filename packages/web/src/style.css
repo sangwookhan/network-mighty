@@ -468,3 +468,6 @@ button.primary.big:hover { background: #ffe57f; }
 .wait-msg { text-align: center; font-size: 16px; color: #ffd54f; }
 .room-body.felt aside .chat { color: #222; }
 
+/* 조커 선: 기루다 컴 강조 */
+.dsb .kiruda-come { background: #ffd54f; border-color: #c9a400; color: #000; font-weight: bold; text-shadow: none; }
+.kiruda-come-text { color: #ffd54f; }

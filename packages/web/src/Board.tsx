@@ -373,7 +373,8 @@ function Center({ room, game, sideOf, kiruda }: { room: RoomView; game: GameView
       {game.trick?.jokercall && !complete && <div className="center-flash">조커콜!</div>}
       {game.trick && game.trick.jokerSuit !== NO_SUIT && !complete && (
         <div className="center-note">
-          조커 무늬: <SuitIcon suit={game.trick.jokerSuit} /> {SUIT_NAME[game.trick.jokerSuit]}
+          조커 · <SuitIcon suit={game.trick.jokerSuit} />{' '}
+          {game.trick.jokerSuit === kiruda ? <b className="kiruda-come-text">기루다 컴!</b> : `${SUIT_NAME[game.trick.jokerSuit]} 컴`}
         </div>
       )}
       {winner !== null && stage !== 'gone' && <div className="center-note">{room.seats[winner].nickname} 님이 가져감</div>}
@@ -525,12 +526,20 @@ function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards, setDis
       {discarding && <div className="my-prompt">버릴 카드 3장을 눌러 올리세요 ({discards.length}/3)</div>}
       {ask === 'jokerSuit' && (
         <Dsb title="조커로 선을 잡습니다" className="dsb-inline">
-          무늬를 고르세요{' '}
-          {[1, 2, 3, 4].map((s) => (
-            <button key={s} onClick={() => (setAsk(null), playCard({ kind: 'play', card: JOKER, jokerSuit: s as Suit }))}>
-              {SUIT_SYMBOL[s]} {SUIT_NAME[s]}
+          무늬를 부르세요{' '}
+          {/* 기루다 컴을 맨 앞에 강조, 나머지 무늬는 '○○ 컴' (노기루다 판이면 기루다 컴 없음) */}
+          {kiruda !== NO_SUIT && (
+            <button className="primary kiruda-come" onClick={() => (setAsk(null), playCard({ kind: 'play', card: JOKER, jokerSuit: kiruda }))}>
+              기루다 컴 ({SUIT_SYMBOL[kiruda]})
             </button>
-          ))}
+          )}
+          {[1, 2, 3, 4]
+            .filter((s) => s !== kiruda)
+            .map((s) => (
+              <button key={s} onClick={() => (setAsk(null), playCard({ kind: 'play', card: JOKER, jokerSuit: s as Suit }))}>
+                {SUIT_SYMBOL[s]} {SUIT_NAME[s]} 컴
+              </button>
+            ))}
           <button onClick={() => setAsk(null)}>취소</button>
         </Dsb>
       )}
