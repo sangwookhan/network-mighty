@@ -35,3 +35,6 @@
 .sp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
 .sp-row input[type='range'] { flex: 1; }
 .sp-row button { font-size: 11px; padding: 1px 8px; }
+
+/* 주공일 때 내 패의 기루다: 카드 안쪽 분홍 테두리 (밖의 노랑=낼 수 있음, 하늘=고름 표시와 겹치지 않게) */
+.my-hand-cards .slot.trump .card { outline: 3px solid #ff4fa3; outline-offset: -3px; border-radius: 5px; }

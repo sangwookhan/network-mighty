@@ -1,6 +1,6 @@
 // 내 패: 고정 자리 배치, 카드 내기, 바닥패 받기, 조커·조커콜 선택
 
-import { JOKER, NO_SUIT, jokercallOf, mightyOf, suitOf, type Card, type Suit } from '@mighty/engine';
+import { JOKER, NO_SUIT, isKiruda, jokercallOf, mightyOf, suitOf, type Card, type Suit } from '@mighty/engine';
 import type { GameView, RoomView } from '@mighty/protocol';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { CardView, SUIT_NAME, SUIT_SYMBOL, shortName, sortHand } from '../cards.js';
@@ -107,6 +107,8 @@ export function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards,
   }, [fresh]);
   const slots = handSlots(layout.order, rules, cw, portrait ? boardWidth - 8 : Math.min(boardWidth * (boardWidth > 900 ? 0.58 : 0.86), 15 * cw));
   const inHand = new Set(game.myHand);
+  // 내가 주공이면 내 패의 기루다를 분홍 테두리로 (노기루다면 없음)
+  const showTrump = room.me.seat !== null && game.master === room.me.seat && kiruda !== NO_SUIT;
   const seat = room.seats[room.me.seat!];
 
   const play = (card: Card) => {
@@ -158,7 +160,7 @@ export function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards,
       <div className="my-row">
         <div className="my-hand-cards" style={{ width: slots.width }} ref={handRef}>
           {layout.order.filter((c) => inHand.has(c)).map((c) => (
-            <div key={c} className={`slot ${fresh?.cards.includes(c) ? 'fresh' : ''}`} data-slot={c} style={{ left: slots.x.get(c) }}>
+            <div key={c} className={`slot ${fresh?.cards.includes(c) ? 'fresh' : ''} ${showTrump && isKiruda(c, kiruda) ? 'trump' : ''}`} data-slot={c} style={{ left: slots.x.get(c) }}>
               <CardView
                 card={c}
                 rules={rules}
