@@ -6,7 +6,7 @@
 // ?p=<이름> 을 붙이면 저장 이름을 따로 써서, 한 브라우저에서 여러 사람으로 접속할 수 있다 (개발·시험용).
 
 import { useSyncExternalStore } from 'react';
-import { PROTOCOL_VERSION, type ClientMessage, type GameAction, type RoomSummary, type RoomView, type ServerMessage } from '@mighty/protocol';
+import { PROTOCOL_VERSION, applyRoomMessage, emptyRoomCache, type ClientMessage, type GameAction, type RoomSummary, type RoomView, type ServerMessage } from '@mighty/protocol';
 
 const profile = new URLSearchParams(location.search).get('p') ?? '';
 const key = (k: string) => `mighty.${k}${profile ? `.${profile}` : ''}`;
@@ -87,7 +87,15 @@ function connect() {
   };
 }
 
+// 방 상태·규칙·채팅을 모아 화면용 방 정보를 만든다 (protocol 의 applyRoomMessage)
+let roomCache = emptyRoomCache();
+
 function receive(m: ServerMessage) {
+  const next = applyRoomMessage(roomCache, m);
+  if (next !== roomCache) {
+    roomCache = next;
+    if (next.room !== state.room) set({ room: next.room });
+  }
   switch (m.t) {
     case 'welcome':
       tab.token = m.token;
@@ -108,13 +116,9 @@ function receive(m: ServerMessage) {
       set({ replaced: { nickname: state.me?.nickname ?? last.nickname ?? '' }, me: null, room: null, lobby: null });
       break;
     case 'lobby':
-      set({ lobby: { rooms: m.rooms, online: m.online }, room: null });
-      break;
-    case 'room':
-      set({ room: m.room });
+      set({ lobby: { rooms: m.rooms, online: m.online } });
       break;
     case 'leftRoom':
-      set({ room: null });
       if (m.reason) showNotice(m.reason);
       break;
     case 'error':

@@ -2,7 +2,7 @@
 
 import { randomBytes, randomInt } from 'node:crypto';
 import { PRESETS, describePreset, presetRules, type Rules } from '@mighty/engine';
-import { PROTOCOL_VERSION, parseClientMessage, type ChatLine, type ClientMessage, type RoomSummary, type RoomView, type SeatView, type ServerMessage } from '@mighty/protocol';
+import { PROTOCOL_VERSION, parseClientMessage, type ChatLine, type ClientMessage, type RoomState, type RoomSummary, type SeatView, type ServerMessage } from '@mighty/protocol';
 import { DEFAULT_TIMING, Game, type GameHost, type Timing } from './game.js';
 
 export interface Connection {
@@ -267,6 +267,7 @@ export class Room implements GameHost {
 
   join(user: User): void {
     user.roomId = this.id;
+    this.sendIntro(user);
     let seat = -1;
     if (this.status === 'waiting') {
       seat = this.seats.findIndex((s) => s.occupant === 'empty');
@@ -304,6 +305,7 @@ export class Room implements GameHost {
   }
 
   reconnected(user: User): void {
+    this.sendIntro(user);
     const seat = this.seatOf(user.id);
     if (seat !== null) {
       this.systemChat(`${user.nickname}님이 돌아왔습니다`);
@@ -362,6 +364,7 @@ export class Room implements GameHost {
           this.presetId = msg.presetId;
           this.rules = presetRules(msg.presetId);
           this.resizeSeats();
+          for (const u of this.humans()) this.sendStatic(u);
         }
         if (msg.turnSeconds !== undefined) this.turnSeconds = normalizeTurnSeconds(msg.turnSeconds);
         this.changed();
@@ -477,10 +480,21 @@ export class Room implements GameHost {
     this.seats = kept;
   }
 
+  /** 채팅은 새 줄만 보낸다 (방 상태 전체에 넣지 않음) */
   private pushChat(line: ChatLine): void {
     this.chat.push(line);
     if (this.chat.length > MAX_CHAT) this.chat.shift();
-    this.changed();
+    for (const u of this.humans()) u.conn?.send({ t: 'chat', roomId: this.id, line });
+  }
+
+  /** 입장·재접속 때: 규칙·설명과 지금까지의 채팅 */
+  private sendIntro(user: User): void {
+    this.sendStatic(user);
+    user.conn?.send({ t: 'chatHistory', roomId: this.id, lines: this.chat });
+  }
+
+  private sendStatic(user: User): void {
+    user.conn?.send({ t: 'roomStatic', roomId: this.id, presetId: this.presetId, rules: this.rules, preset: describePreset(this.presetId) });
   }
 
   summary(): RoomSummary {
@@ -497,7 +511,7 @@ export class Room implements GameHost {
     };
   }
 
-  viewFor(user: User): RoomView {
+  viewFor(user: User): RoomState {
     const mySeat = this.seatOf(user.id);
     const seats: SeatView[] = this.seats.map((s, i) => {
       const u = this.user(s.userId);
@@ -516,15 +530,12 @@ export class Room implements GameHost {
       name: this.name,
       hostId: this.hostId,
       presetId: this.presetId,
-      rules: this.rules,
-      preset: describePreset(this.presetId),
       turnSeconds: this.turnSeconds,
       status: this.status,
       paused: this.game?.isPaused ? { by: this.pausedBy ?? '?' } : null,
       seats,
       spectators: [...this.spectators].map((id) => ({ playerId: id, nickname: this.user(id)?.nickname ?? '?' })),
       me: { playerId: user.id, seat: mySeat, isHost: user.id === this.hostId },
-      chat: this.chat,
       game: this.game ? this.game.view(mySeat) : null,
     };
   }

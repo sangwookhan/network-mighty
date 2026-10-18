@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.setConfig({ testTimeout: 30_000 });
 import { NO_SUIT, SUITS, goalRange, isValidBid, type Bid } from '@mighty/engine';
-import { PROTOCOL_VERSION, type ClientMessage, type GameAction, type RoomView, type ServerMessage } from '@mighty/protocol';
+import { PROTOCOL_VERSION, applyRoomMessage, emptyRoomCache, type ClientMessage, type GameAction, type RoomView, type ServerMessage } from '@mighty/protocol';
 import { BOTS } from '../src/bots.js';
 import { Hub } from '../src/hub.js';
 
@@ -14,6 +14,9 @@ class Client {
   token?: string;
   playerId?: string;
   room: RoomView | null = null;
+  private cache = emptyRoomCache();
+  /** 받은 방 상태 메시지 크기 (통신량 확인용) */
+  roomBytes: number[] = [];
   errors: string[] = [];
   lobbyRooms: { id: string }[] = [];
   replaced = false;
@@ -44,11 +47,14 @@ class Client {
     if (m.t === 'error') this.errors.push(m.message);
     if (m.t === 'replaced') this.replaced = true;
     if (m.t === 'lobby') this.lobbyRooms = m.rooms;
-    if (m.t === 'room') {
-      this.room = m.room;
-      const g = m.room.game;
+    // 서버는 방 상태·규칙·채팅을 따로 보낸다: 화면과 같은 함수로 합친다
+    this.cache = applyRoomMessage(this.cache, m);
+    if (m.t === 'room') this.roomBytes.push(JSON.stringify(m).length);
+    if (this.cache.room && this.cache.room !== this.room) {
+      this.room = this.cache.room;
+      const g = this.room.game;
       if (g?.phase === 'result') this.dealsFinished.add(g.dealNo);
-      if (this.autoPlay) this.act();
+      if (m.t === 'room' && this.autoPlay) this.act();
     }
   }
 
@@ -319,6 +325,37 @@ describe('통합: 사람 3명 + 봇', () => {
     expect(hub.users.size).toBe(0);
     session.onMessage({ t: 'hello', version: PROTOCOL_VERSION, nickname: '새탭' });
     expect(got.at(-2)?.t).toBe('welcome');
+  });
+
+  it('방 상태에는 규칙·채팅이 빠지고, 채팅은 새 줄만, 나중에 온 사람도 기록과 규칙을 받는다', async () => {
+    const { hub, a, b, roomId } = await setup(1);
+    a.send({ t: 'chat', text: '안녕' });
+    await until(() => b.room!.chat.some((l) => l.text === '안녕'));
+    const d = new Client(hub, '라');
+    d.connect();
+    await until(() => !!d.playerId);
+    d.send({ t: 'joinRoom', roomId });
+    await until(() => !!d.room);
+    expect(d.room!.chat.some((l) => l.text === '안녕')).toBe(true);
+    expect(d.room!.rules.players).toBe(5);
+    expect(d.room!.preset.name).toBe('표준 5마');
+    // 방장이 규칙을 바꾸면 모두 새 규칙을 받는다
+    a.send({ t: 'setRoom', presetId: 2 });
+    await until(() => d.room!.preset.name === '표준 4마' && b.room!.rules.players === 4);
+    // 서버가 보내는 방 상태 메시지에는 규칙·설명·채팅이 없다
+    const raw: ServerMessage[] = [];
+    const s2 = hub.connect({ send: (m) => raw.push(m), close: () => {} });
+    s2.onMessage({ t: 'hello', version: PROTOCOL_VERSION, nickname: '원본보기' });
+    s2.onMessage({ t: 'joinRoom', roomId });
+    await new Promise((r) => setTimeout(r, 10));
+    const roomMsg = raw.find((m) => m.t === 'room') as Extract<ServerMessage, { t: 'room' }>;
+    expect(Object.keys(roomMsg.room)).not.toContain('chat');
+    expect(Object.keys(roomMsg.room)).not.toContain('rules');
+    // 규칙과 채팅 기록이 방 상태보다 먼저 와야 화면이 바로 그릴 수 있다
+    const order = raw.map((m) => m.t);
+    expect(order.indexOf('roomStatic')).toBeLessThan(order.indexOf('room'));
+    expect(order.indexOf('chatHistory')).toBeLessThan(order.indexOf('room'));
+    hub.closeRoom(hub.rooms.get(roomId)!);
   });
 
   it('사람이 모두 나가면 방이 닫힌다', async () => {

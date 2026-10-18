@@ -12,9 +12,9 @@ export type FriendChoice =
 
 /**
  * 프로토콜 버전. 메시지 형식을 바꾸면 올린다. 서버와 다르면 서버가 접속을 거절하고(versionMismatch)
- * 화면은 새로고침을 안내한다. (1: 버전 확인 도입 전, 2: 버전 확인 도입)
+ * 화면은 새로고침을 안내한다. (1: 버전 확인 도입 전, 2: 버전 확인 도입, 3: 방 상태에서 규칙·채팅 분리)
  */
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 
 // ---- 클라이언트 → 서버 ----
 
@@ -49,7 +49,14 @@ export type ServerMessage =
   | { t: 'welcome'; token: string; playerId: string; nickname: string }
   | { t: 'needNickname'; reason?: string }
   | { t: 'lobby'; rooms: RoomSummary[]; online: number }
-  | { t: 'room'; room: RoomView }
+  /** 방 상태 (바뀔 때마다). 규칙·프리셋 설명·채팅은 빠져 있다 → 화면이 roomStatic, chat 과 합친다 */
+  | { t: 'room'; room: RoomState }
+  /** 규칙과 프리셋 설명 (입장·재접속·방장이 규칙을 바꿀 때만) */
+  | { t: 'roomStatic'; roomId: string; presetId: number; rules: Rules; preset: PresetDescription }
+  /** 지금까지의 채팅 (입장·재접속 때) */
+  | { t: 'chatHistory'; roomId: string; lines: ChatLine[] }
+  /** 새 채팅 한 줄 */
+  | { t: 'chat'; roomId: string; line: ChatLine }
   | { t: 'leftRoom'; reason?: string }
   /** 같은 사람이 다른 창에서 접속해서 이 연결은 끊긴다 (자동 재접속하지 말 것) */
   | { t: 'replaced' }
@@ -87,6 +94,7 @@ export interface ChatLine {
   text: string;
 }
 
+/** 화면이 쓰는 방 정보 전체 (= 서버가 보내는 RoomState + roomStatic + 채팅) */
 export interface RoomView {
   id: string;
   name: string;
@@ -104,6 +112,9 @@ export interface RoomView {
   chat: ChatLine[];
   game: GameView | null;
 }
+
+/** 서버가 상태 변화 때마다 보내는 부분 (자주 바뀌지 않는 규칙·설명과 채팅은 따로 보낸다) */
+export type RoomState = Omit<RoomView, 'rules' | 'preset' | 'chat'>;
 
 export type GamePhase = 'election' | 'kill' | 'final' | 'play' | 'result';
 
@@ -163,3 +174,4 @@ export interface GameView {
   } | null;
 }
 export * from './validate.js';
+export * from './assemble.js';
