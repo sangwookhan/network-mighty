@@ -6,7 +6,7 @@
 // ?p=<이름> 을 붙이면 저장 이름을 따로 써서, 한 브라우저에서 여러 사람으로 접속할 수 있다 (개발·시험용).
 
 import { useSyncExternalStore } from 'react';
-import type { ClientMessage, GameAction, RoomSummary, RoomView, ServerMessage } from '@mighty/protocol';
+import { PROTOCOL_VERSION, type ClientMessage, type GameAction, type RoomSummary, type RoomView, type ServerMessage } from '@mighty/protocol';
 
 const profile = new URLSearchParams(location.search).get('p') ?? '';
 const key = (k: string) => `mighty.${k}${profile ? `.${profile}` : ''}`;
@@ -19,12 +19,14 @@ export interface NetState {
   choose: { nickname: string } | null;
   /** 같은 사람이 다른 창에서 접속해서 이 창은 밀려남 (자동 재접속 멈춤) */
   replaced: { nickname: string } | null;
+  /** 서버가 새 버전이라 이 화면은 새로고침해야 함 */
+  outdated: boolean;
   lobby: { rooms: RoomSummary[]; online: number } | null;
   room: RoomView | null;
   notice: string | null;
 }
 
-let state: NetState = { connected: false, me: null, needNickname: null, choose: null, replaced: null, lobby: null, room: null, notice: null };
+let state: NetState = { connected: false, me: null, needNickname: null, choose: null, replaced: null, outdated: false, lobby: null, room: null, notice: null };
 
 const tab = {
   get token() {
@@ -72,7 +74,7 @@ function connect() {
   ws = new WebSocket(`${proto}://${location.host}/ws`);
   ws.onopen = () => {
     set({ connected: true });
-    if (tab.token) send({ t: 'hello', token: tab.token }); // 이 탭이 쓰던 신원: 바로 들어감
+    if (tab.token) send({ t: 'hello', version: PROTOCOL_VERSION, token: tab.token }); // 이 탭이 쓰던 신원: 바로 들어감
     else if (wantNewNickname) set({ needNickname: { suggested: undefined } });
     else if (last.token && last.nickname) set({ choose: { nickname: last.nickname } }); // 새 창: 물어봄
     else set({ needNickname: { suggested: last.nickname ?? undefined } });
@@ -99,6 +101,9 @@ function receive(m: ServerMessage) {
       tab.token = null;
       set({ needNickname: { reason: m.reason, suggested: last.nickname ?? undefined }, me: null, choose: null });
       break;
+    case 'versionMismatch':
+      set({ outdated: true });
+      break;
     case 'replaced':
       set({ replaced: { nickname: state.me?.nickname ?? last.nickname ?? '' }, me: null, room: null, lobby: null });
       break;
@@ -123,7 +128,7 @@ export function send(m: ClientMessage) {
 }
 
 export function sendHello(nickname: string) {
-  send({ t: 'hello', nickname });
+  send({ t: 'hello', version: PROTOCOL_VERSION, nickname });
 }
 
 /** 새 창에서 [OOO님으로 계속]: 마지막 신원을 이 탭이 이어받는다 (먼저 열린 창은 밀려남) */
@@ -131,7 +136,7 @@ export function continueAsLast() {
   if (!last.token) return set({ choose: null, needNickname: {} });
   tab.token = last.token;
   set({ choose: null });
-  send({ t: 'hello', token: last.token });
+  send({ t: 'hello', version: PROTOCOL_VERSION, token: last.token });
 }
 
 /** [다른 닉네임으로 입장]: 이 탭만 새 사람으로 */
@@ -145,7 +150,7 @@ export function chooseNewNickname() {
 /** 밀려난 창에서 [여기서 계속]: 다시 접속해 이 창이 이어받는다 */
 export function takeBack() {
   set({ replaced: null });
-  if (ws && ws.readyState === WebSocket.OPEN) send({ t: 'hello', token: tab.token ?? undefined });
+  if (ws && ws.readyState === WebSocket.OPEN) send({ t: 'hello', version: PROTOCOL_VERSION, token: tab.token ?? undefined });
   else connect();
 }
 

@@ -7,7 +7,17 @@ import './style.css';
 function App() {
   const net = useNet();
   let body;
-  if (!net.me) body = <NicknameScreen />;
+  if (net.outdated)
+    body = (
+      <div className="center-box">
+        <h1>마이티</h1>
+        <p>새 버전이 나왔습니다. 새로고침해 주세요.</p>
+        <button className="primary" onClick={() => location.reload()}>
+          새로고침
+        </button>
+      </div>
+    );
+  else if (!net.me) body = <NicknameScreen />;
   else if (net.room) body = <RoomScreen room={net.room} />;
   else body = <Lobby />;
   return (

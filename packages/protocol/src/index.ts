@@ -10,10 +10,16 @@ export type FriendChoice =
   | { kind: 'player'; seat: number }
   | { kind: 'card'; card: Card };
 
+/**
+ * 프로토콜 버전. 메시지 형식을 바꾸면 올린다. 서버와 다르면 서버가 접속을 거절하고(versionMismatch)
+ * 화면은 새로고침을 안내한다. (1: 버전 확인 도입 전, 2: 버전 확인 도입)
+ */
+export const PROTOCOL_VERSION = 2;
+
 // ---- 클라이언트 → 서버 ----
 
 export type ClientMessage =
-  | { t: 'hello'; token?: string; nickname?: string }
+  | { t: 'hello'; version?: number; token?: string; nickname?: string }
   | { t: 'createRoom'; name: string; presetId: number; turnSeconds: number }
   | { t: 'joinRoom'; roomId: string }
   | { t: 'leaveRoom' }
@@ -47,6 +53,8 @@ export type ServerMessage =
   | { t: 'leftRoom'; reason?: string }
   /** 같은 사람이 다른 창에서 접속해서 이 연결은 끊긴다 (자동 재접속하지 말 것) */
   | { t: 'replaced' }
+  /** 클라이언트와 서버의 프로토콜 버전이 다름 (새로고침 필요) */
+  | { t: 'versionMismatch'; serverVersion: number }
   | { t: 'error'; message: string };
 
 export interface RoomSummary {

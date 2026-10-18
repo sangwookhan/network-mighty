@@ -2,7 +2,7 @@
 
 import { randomBytes, randomInt } from 'node:crypto';
 import { PRESETS, describePreset, presetRules, type Rules } from '@mighty/engine';
-import { parseClientMessage, type ChatLine, type ClientMessage, type RoomSummary, type RoomView, type SeatView, type ServerMessage } from '@mighty/protocol';
+import { PROTOCOL_VERSION, parseClientMessage, type ChatLine, type ClientMessage, type RoomSummary, type RoomView, type SeatView, type ServerMessage } from '@mighty/protocol';
 import { DEFAULT_TIMING, Game, type GameHost, type Timing } from './game.js';
 
 export interface Connection {
@@ -68,6 +68,8 @@ export class Hub {
         if (!msg) return conn.send({ t: 'error', message: '잘못된 요청입니다' });
         if (!user) {
           if (msg?.t !== 'hello') return conn.send({ t: 'needNickname' });
+          // 버전이 다른 화면(예전 탭)은 받지 않는다
+          if (msg.version !== PROTOCOL_VERSION) return conn.send({ t: 'versionMismatch', serverVersion: PROTOCOL_VERSION });
           user = this.hello(conn, msg);
           return;
         }

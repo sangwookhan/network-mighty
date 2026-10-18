@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.setConfig({ testTimeout: 30_000 });
 import { NO_SUIT, SUITS, goalRange, isValidBid, type Bid } from '@mighty/engine';
-import type { ClientMessage, GameAction, RoomView, ServerMessage } from '@mighty/protocol';
+import { PROTOCOL_VERSION, type ClientMessage, type GameAction, type RoomView, type ServerMessage } from '@mighty/protocol';
 import { BOTS } from '../src/bots.js';
 import { Hub } from '../src/hub.js';
 
@@ -28,7 +28,7 @@ class Client {
   connect(): void {
     const conn = { send: (m: ServerMessage) => setImmediate(() => this.receive(m)), close: () => {} };
     this.session = this.hub.connect(conn);
-    this.send({ t: 'hello', token: this.token, nickname: this.nickname });
+    this.send({ t: 'hello', version: PROTOCOL_VERSION, token: this.token, nickname: this.nickname });
   }
   disconnect(): void {
     this.session?.onClose();
@@ -307,6 +307,18 @@ describe('통합: 사람 3명 + 봇', () => {
     if (w.remainingMs !== null) expect(w.remainingMs).toBeGreaterThan(25_000), expect(w.remainingMs).toBeLessThanOrEqual(30_000);
     expect(JSON.stringify(a.room)).not.toContain('deadline');
     hub.closeRoom(hub.rooms.get(a.room!.id)!);
+  });
+
+  it('프로토콜 버전이 다르면 접속을 거절한다', async () => {
+    const hub = new Hub({ timing: FAST });
+    const got: ServerMessage[] = [];
+    const session = hub.connect({ send: (m) => got.push(m), close: () => {} });
+    session.onMessage({ t: 'hello', version: PROTOCOL_VERSION - 1, nickname: '예전탭' });
+    session.onMessage({ t: 'hello', nickname: '버전없음' });
+    expect(got.map((m) => m.t)).toEqual(['versionMismatch', 'versionMismatch']);
+    expect(hub.users.size).toBe(0);
+    session.onMessage({ t: 'hello', version: PROTOCOL_VERSION, nickname: '새탭' });
+    expect(got.at(-2)?.t).toBe('welcome');
   });
 
   it('사람이 모두 나가면 방이 닫힌다', async () => {

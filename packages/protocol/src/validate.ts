@@ -66,7 +66,7 @@ export function parseClientMessage(m: unknown): ClientMessage | null {
   const ok = (() => {
     switch (m.t) {
       case 'hello':
-        return optStr(m.token, 64) && optStr(m.nickname, 40);
+        return optInt(m.version, 0, 1e6) && optStr(m.token, 64) && optStr(m.nickname, 40);
       case 'createRoom':
         return isStr(m.name, 60) && isInt(m.presetId, 1, 99) && isInt(m.turnSeconds, 0, 3600);
       case 'joinRoom':
