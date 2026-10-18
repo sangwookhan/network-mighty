@@ -89,6 +89,14 @@ interface Pending {
 
 const SUIT_KO = ['', '스페이드', '다이아몬드', '하트', '클로버'];
 
+/** 주공이 바닥패를 받고 버릴 카드·공약·프렌드를 정하는 단계는 오래 고민하므로 차례 제한 시간의 4배를 준다 */
+export const FINAL_TIME_FACTOR = 4;
+
+/** 요청 종류별 제한 시간(밀리초) */
+export function turnLimitMs(turnSeconds: number, kind: Request['kind']): number {
+  return turnSeconds * 1000 * (kind === 'final' ? FINAL_TIME_FACTOR : 1);
+}
+
 export class Game {
   // ---- 판 상태 (좌석 번호 기준 배열) ----
   dealNo = 0;
@@ -247,7 +255,7 @@ export class Game {
       p.deadline = null;
       p.cancel = later(() => this.botAct(seat), this.timing.botDelayMs);
     } else if (this.host.turnSeconds > 0) {
-      if (!reassigned || p.deadline === null) p.deadline = Date.now() + this.host.turnSeconds * 1000;
+      if (!reassigned || p.deadline === null) p.deadline = Date.now() + turnLimitMs(this.host.turnSeconds, p.req.kind);
       p.cancel = later(() => this.botAct(seat), Math.max(0, p.deadline - Date.now()));
     } else {
       p.deadline = null;

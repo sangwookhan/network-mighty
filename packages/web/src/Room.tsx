@@ -124,7 +124,7 @@ function WaitingRoom({ room }: { room: RoomView }) {
               규칙 <PresetSelect value={room.presetId} onChange={(presetId) => send({ t: 'setRoom', presetId })} />
             </label>
             <label>
-              차례 제한 시간 <TurnSelect value={room.turnSeconds} onChange={(turnSeconds) => send({ t: 'setRoom', turnSeconds })} />
+              차례 제한 시간 <TurnSelect value={room.turnSeconds} onChange={(turnSeconds) => send({ t: 'setRoom', turnSeconds })} /> <span className="hint">(주공 정리는 4배)</span>
             </label>
             <PresetInfo presetId={room.presetId} />
             <button className="primary big" onClick={() => send({ t: 'start' })}>

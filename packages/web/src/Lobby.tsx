@@ -108,7 +108,13 @@ export const TURN_CHOICES = [
 
 export function TurnSelect({ value, onChange, disabled }: { value: number; onChange: (s: number) => void; disabled?: boolean }) {
   return (
-    <select value={value} onChange={(e) => onChange(Number(e.target.value))} disabled={disabled} name="turnSeconds">
+    <select
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      disabled={disabled}
+      name="turnSeconds"
+      title="주공이 바닥패를 받고 정리할 때는 이 시간의 4배"
+    >
       {TURN_CHOICES.map(([s, label]) => (
         <option key={s} value={s}>
           {label}
@@ -172,7 +178,7 @@ export function Lobby() {
           </label>
           <PresetInfo presetId={presetId} />
           <label>
-            차례 제한 시간 <TurnSelect value={turnSeconds} onChange={setTurnSeconds} />
+            차례 제한 시간 <TurnSelect value={turnSeconds} onChange={setTurnSeconds} /> <span className="hint">(주공 정리는 4배)</span>
           </label>
           <button className="primary big" onClick={() => send({ t: 'createRoom', name, presetId, turnSeconds })}>
             방 만들기
