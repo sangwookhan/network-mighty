@@ -1,5 +1,5 @@
 import type { RoomView } from '@mighty/protocol';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Board } from './board/Board.js';
 import { PresetInfo, PresetSelect, TURN_CHOICES, TurnSelect } from './Lobby.js';
 import { send, useNet } from './net.js';
@@ -36,14 +36,7 @@ export function RoomScreen({ room }: { room: RoomView }) {
         <div className={`room-play players-${room.seats.length}`}>
           <Board room={room} game={room.game!} />
           {showScore && <Scoreboard room={room} onClose={() => setShowScore(false)} />}
-          {showChat && (
-            <div className="float-window chat-window">
-              <div className="float-title">
-                채팅 <button onClick={() => setShowChat(false)}>✕</button>
-              </div>
-              <Chat room={room} />
-            </div>
-          )}
+          {showChat && <ChatWindow room={room} fromTop={room.seats.length === 6} onClose={() => setShowChat(false)} />}
         </div>
       ) : (
         <div className="room-body felt">
@@ -149,15 +142,86 @@ function WaitingRoom({ room }: { room: RoomView }) {
   );
 }
 
+const CHAT_SIZE_KEY = 'mighty.chatSize';
+
+/**
+ * 게임판 위에 떠 있는 채팅 창. 모서리 손잡이로 크기를 바꾸고, 크기는 이 브라우저에 저장한다.
+ * 보통은 왼쪽 아래에 붙어 있어 손잡이가 오른쪽 위, 6마는 왼쪽 위에 있어 손잡이가 오른쪽 아래.
+ */
+function ChatWindow({ room, fromTop, onClose }: { room: RoomView; fromTop: boolean; onClose: () => void }) {
+  const [size, setSize] = useState<{ w: number; h: number }>(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(CHAT_SIZE_KEY) ?? '');
+      if (Number.isFinite(s.w) && Number.isFinite(s.h)) return s;
+    } catch {
+      /* 저장된 크기 없음 */
+    }
+    return { w: 210, h: 195 };
+  });
+  const win = useRef<HTMLDivElement>(null);
+  const startResize = (e: ReactPointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const grip = e.currentTarget;
+    grip.setPointerCapture(e.pointerId);
+    const start = { x: e.clientX, y: e.clientY, ...size };
+    const area = win.current?.parentElement?.getBoundingClientRect();
+    const maxW = (area?.width ?? 800) - 16;
+    const maxH = (area?.height ?? 600) - 48;
+    let last = size;
+    const move = (ev: PointerEvent) => {
+      const dy = ev.clientY - start.y;
+      last = {
+        w: Math.round(Math.min(maxW, Math.max(160, start.w + ev.clientX - start.x))),
+        h: Math.round(Math.min(maxH, Math.max(110, fromTop ? start.h + dy : start.h - dy))),
+      };
+      setSize(last);
+    };
+    const up = () => {
+      grip.removeEventListener('pointermove', move);
+      grip.removeEventListener('pointerup', up);
+      grip.removeEventListener('pointercancel', up);
+      localStorage.setItem(CHAT_SIZE_KEY, JSON.stringify(last));
+    };
+    grip.addEventListener('pointermove', move);
+    grip.addEventListener('pointerup', up);
+    grip.addEventListener('pointercancel', up);
+  };
+  return (
+    <div className="float-window chat-window" ref={win} style={{ width: size.w, height: size.h }}>
+      <div className="float-title">
+        채팅 <button onClick={onClose}>✕</button>
+      </div>
+      <Chat room={room} />
+      <div className={`resize-grip ${fromTop ? 'bottom' : 'top'}`} onPointerDown={startResize} title="끌어서 크기 바꾸기" />
+    </div>
+  );
+}
+
+/** 마지막 조작(스크롤·입력) 뒤 이만큼 아무것도 안 하면 가장 최근 줄로 내려간다 */
+const CHAT_IDLE_MS = 3000;
+
 function Chat({ room }: { room: RoomView }) {
   const [text, setText] = useState('');
   const box = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    box.current?.scrollTo(0, box.current.scrollHeight);
-  }, [room.chat.length]);
+  const lastTouch = useRef(0);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // 새 줄이 오거나 조작이 끝나면, 조작 뒤 3초가 지났을 때 맨 아래로 (지난 대화를 읽는 중에는 끌어내리지 않음)
+  const followLatest = () => {
+    clearTimeout(timer.current);
+    const wait = CHAT_IDLE_MS - (Date.now() - lastTouch.current);
+    const toBottom = () => box.current?.scrollTo(0, box.current.scrollHeight);
+    if (wait <= 0) toBottom();
+    else timer.current = setTimeout(toBottom, wait);
+  };
+  const touched = () => {
+    lastTouch.current = Date.now();
+    followLatest();
+  };
+  useEffect(followLatest, [room.chat.length]);
+  useEffect(() => () => clearTimeout(timer.current), []);
   return (
     <div className="chat">
-      <div className="lines" ref={box}>
+      <div className="lines" ref={box} onWheel={touched} onTouchMove={touched} onPointerDown={touched} onKeyDown={touched}>
         {room.chat.map((l, i) => (
           <div key={i} className={l.from ? 'line' : 'line system'}>
             {l.from && <b>{l.from}: </b>}
@@ -170,6 +234,7 @@ function Chat({ room }: { room: RoomView }) {
           e.preventDefault();
           if (text.trim()) send({ t: 'chat', text });
           setText('');
+          lastTouch.current = 0; // 내가 보낸 줄은 바로 보이게
         }}
       >
         <input value={text} onChange={(e) => setText(e.target.value)} placeholder="채팅" maxLength={200} name="chat" />

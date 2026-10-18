@@ -90,10 +90,15 @@
 .score-window th { font-weight: normal; color: #444; padding: 2px 6px; }
 .score-window td { padding: 1px 6px; }
 .score-window tr.me td { font-weight: bold; }
-.chat-window { left: 8px; bottom: 32px; width: 210px; }
+.chat-window { left: 8px; bottom: 32px; display: flex; flex-direction: column; min-width: 160px; min-height: 110px; }
 /* 6마는 왼쪽 아래에 사람이 앉으므로 채팅 창을 왼쪽 위로 */
 .room-play.players-6 .chat-window { bottom: auto; top: 8px; }
-.chat-window .chat { height: 170px; border: 0; border-radius: 0; }
+.chat-window .chat { flex: 1; min-height: 0; height: auto; border: 0; border-radius: 0; }
+/* 크기 손잡이: 아래에 붙은 창은 오른쪽 위, 위에 붙은 창(6마)은 오른쪽 아래 */
+.resize-grip { position: absolute; right: -1px; width: 16px; height: 16px; z-index: 1; touch-action: none; }
+.resize-grip.top { top: -1px; cursor: nesw-resize; background: linear-gradient(225deg, #fff 0 3px, #2456c4 3px 5px, transparent 5px 7px, #2456c4 7px 9px, transparent 9px); }
+.resize-grip.bottom { bottom: -1px; cursor: nwse-resize; background: linear-gradient(315deg, #777 0 2px, transparent 2px 4px, #777 4px 6px, transparent 6px 8px, #777 8px 10px, transparent 10px); }
+.chat-window .float-title { padding-right: 18px; }
 
 /* 큰 화면에서는 글씨도 카드와 함께 키운다 (--s = 카드 배율) */
 .board .name-tag { font-size: calc(11px + 4px * var(--s, 1)); }
