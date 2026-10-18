@@ -21,7 +21,7 @@ import {
   type Suit,
 } from '@mighty/engine';
 import type { FriendChoice, GameAction, Request } from '@mighty/protocol';
-import type { Game } from './game.js';
+import type { BotView as Game } from './botView.js';
 
 export function decideSimple(g: Game, seat: number, req: Request): GameAction {
   switch (req.kind) {
@@ -66,7 +66,7 @@ export function estimate(g: Game, hand: readonly Card[], kiruda: Suit): number {
 
 function chooseBid(g: Game, seat: number): Bid {
   const es = g.election!;
-  const hand = g.hands[seat];
+  const hand = g.myHand;
   const rules = g.rules;
   if (isValidBid(es, { type: 'dealMiss' }, hand, rules)) return { type: 'dealMiss' };
   const kiruda = bestSuit(hand);
@@ -87,7 +87,7 @@ function chooseBid(g: Game, seat: number): Bid {
 // ---- 6마 탈락 지목 ----
 
 function chooseKill(g: Game, seat: number, failed: readonly Card[]): Card {
-  const hand = g.hands[seat];
+  const hand = g.myHand;
   const kiruda = g.contract!.kiruda;
   const wish: Card[] = [JOKER, mightyOf(g.rules, kiruda)];
   if (kiruda !== NO_SUIT) for (const r of [1, 13, 12]) wish.push(makeCard(kiruda, r));
@@ -107,7 +107,7 @@ function keepValue(c: Card, kiruda: Suit, g: Game): number {
 }
 
 function chooseFinal(g: Game, seat: number): GameAction {
-  const hand = g.hands[seat];
+  const hand = g.myHand;
   const contract = g.electedContract!;
   const discards = [...hand].sort((a, b) => keepValue(a, contract.kiruda, g) - keepValue(b, contract.kiruda, g)).slice(0, 3);
   const candidates: FriendChoice[] = [
@@ -137,7 +137,7 @@ function choosePlay(g: Game, seat: number, req: Extract<Request, { kind: 'play' 
   const kiruda = g.contract!.kiruda;
   const trick = g.trick!;
   const byCost = [...legal].sort((a, b) => cost(a, g) - cost(b, g));
-  const hand = g.hands[seat];
+  const hand = g.myHand;
 
   if (trick.cards.length === 0) {
     // 선: 기루다가 아닌 A가 있으면 먼저, 아니면 가장 싼 카드

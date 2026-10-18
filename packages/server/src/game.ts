@@ -36,7 +36,9 @@ import {
   type Trick,
 } from '@mighty/engine';
 import type { FriendChoice, GameAction, GamePhase, GameView, PlayedCard, Request } from '@mighty/protocol';
+import { BotView } from './botView.js';
 import { decideFor, type BotKind } from './bots.js';
+import { isValidFinalAction, toEngineFriend } from './finalCheck.js';
 
 export interface GameHost {
   readonly rules: Rules;
@@ -261,7 +263,8 @@ export class Game {
     if (!p) return;
     let action: GameAction | null = null;
     try {
-      action = decideFor(this.host.botKind?.(seat) ?? 'smart', this, seat, p.req);
+      // 봇은 사람과 같은 '그 좌석에서 보이는 정보'만 받는다 (남의 패를 볼 수 없음)
+      action = decideFor(this.host.botKind?.(seat) ?? 'smart', new BotView(this.rules, seat, this.view(seat)), seat, p.req);
       if (!p.validate(action)) {
         console.error(`[game] 봇이 규칙에 어긋난 수를 냄 (좌석 ${seat}):`, JSON.stringify(action));
         action = null;
@@ -554,31 +557,19 @@ export class Game {
     return { cards: t.cards.map((c) => c.card), turn: this.turn, jokerSuit: t.jokerSuit, jokercall: t.jokercall };
   }
 
-  /** 프로토콜의 프렌드 지정 → 엔진 형식 (player 좌석을 이번 판 순번으로). 잘못된 좌석이면 null */
   toEngineFriend(f: FriendChoice): FriendSpec | null {
-    if (f.kind !== 'player') return f;
-    const i = this.active.indexOf(f.seat);
-    return i < 0 ? null : { kind: 'player', seat: i };
+    return toEngineFriend(f, this.active);
   }
 
+
   validateFinal(x: GameAction): boolean {
-    if (x.kind !== 'final' || this.master === null || !this.electedContract) return false;
-    const hand = this.hands[this.master];
-    const d = x.discards;
-    if (!Array.isArray(d) || d.length !== 3 || new Set(d).size !== 3 || !d.every((c) => hand.includes(c))) return false;
-    const c = x.contract;
-    if (!c || !Number.isInteger(c.kiruda) || c.kiruda < 0 || c.kiruda > 4) return false;
-    if (!isValidFinalContract(this.electedContract, c, this.rules)) return false;
-    const spec = x.friend && this.toEngineFriend(x.friend);
-    if (!spec) return false;
-    return isValidFriend(spec, {
-      rules: this.rules,
-      n: this.active.length,
-      master: this.active.indexOf(this.master),
-      masterHand: hand.filter((card) => !d.includes(card)),
-      discards: d,
-    });
+    if (this.master === null || !this.electedContract) return false;
+    return isValidFinalAction(
+      { rules: this.rules, hand: this.hands[this.master], active: this.active, master: this.master, elected: this.electedContract },
+      x,
+    );
   }
+
 
   private setupFriend(f: FriendChoice): void {
     const spec = this.toEngineFriend(f)!;
@@ -624,6 +615,7 @@ export class Game {
       turn: this.turn,
       trick: this.trick && { ...this.trick, cards: [...this.trick.cards] },
       lastTrick: this.lastTrick,
+      history: this.history,
       taken: this.taken.length === n ? this.taken : Array.from({ length: n }, () => []),
       waitingFor: this.waitingFor(),
       myRequest: viewerSeat !== null ? this.requestFor(viewerSeat) : null,

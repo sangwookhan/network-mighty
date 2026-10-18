@@ -153,6 +153,8 @@ export interface GameView {
   turn: number;
   trick: { leader: number; cards: PlayedCard[]; jokerSuit: Suit; jokercall: boolean } | null;
   lastTrick: { cards: PlayedCard[]; winner: number } | null;
+  /** 이번 판에 끝난 트릭 기록 (모두에게 공개된 정보) */
+  history: { leader: number; cards: PlayedCard[]; jokerSuit: Suit; jokercall: boolean; winner: number }[];
   /** 좌석별로 딴 점수카드 */
   taken: Card[][];
   /**

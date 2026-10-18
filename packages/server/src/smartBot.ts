@@ -30,7 +30,7 @@ import {
   type Suit,
 } from '@mighty/engine';
 import type { FriendChoice, GameAction, Request } from '@mighty/protocol';
-import type { Game } from './game.js';
+import type { BotView as Game } from './botView.js';
 
 /** 조정용 상수 (봇끼리 대결로 맞춘다: scripts/bench.ts) */
 export const PARAMS = {
@@ -120,7 +120,7 @@ export function targetGoal(hand: readonly Card[], kiruda: Suit, rules: Rules, wi
 
 function chooseBid(g: Game, seat: number): Bid {
   const es = g.election!;
-  const hand = g.hands[seat];
+  const hand = g.myHand;
   const rules = g.rules;
   if (isValidBid(es, { type: 'dealMiss' }, hand, rules)) return { type: 'dealMiss' };
 
@@ -167,7 +167,7 @@ export function bestSuitByLength(hand: readonly Card[]): Suit {
 // ================= 6마 탈락 지목 =================
 
 function chooseKill(g: Game, seat: number, failed: readonly Card[]): Card {
-  const hand = g.hands[seat];
+  const hand = g.myHand;
   const kiruda = g.contract!.kiruda;
   const wish: Card[] = [JOKER, mightyOf(g.rules, kiruda)];
   if (kiruda !== NO_SUIT) for (const r of [1, 13, 12, 11]) wish.push(makeCard(kiruda, r));
@@ -201,7 +201,7 @@ function bestDiscard(hand13: readonly Card[], kiruda: Suit, rules: Rules): { dis
 
 function chooseFinal(g: Game, seat: number): GameAction {
   const rules = g.rules;
-  const hand = g.hands[seat];
+  const hand = g.myHand;
   const elected = g.electedContract!;
   const team = (rules.friendEnabled ? PARAMS.friendTricks : 0) * PARAMS.pointsPerTrick;
 
@@ -230,7 +230,7 @@ function chooseFinal(g: Game, seat: number): GameAction {
 
 function friendCandidates(g: Game, seat: number, kiruda: Suit, discards: Card[]): FriendChoice[] {
   const rules = g.rules;
-  const keep = g.hands[seat].filter((c) => !discards.includes(c));
+  const keep = g.myHand.filter((c) => !discards.includes(c));
   const out: FriendChoice[] = [];
   const add = (c: Card) => {
     if (!keep.includes(c) && !discards.includes(c)) out.push({ kind: 'card', card: c });
@@ -277,17 +277,16 @@ class Knowledge {
         }
       }
     }
-    const hand = new Set(g.hands[me]);
-    const mine = me === g.master ? new Set(g.discards) : new Set<Card>();
+    const hand = new Set(g.myHand);
+    const mine = new Set(g.myDiscards);
     this.unknown = [];
     for (let c = 1; c <= 53; c++) if (!hand.has(c) && !this.played.has(c) && !mine.has(c)) this.unknown.push(c);
 
     const f = g.friendChoice;
     const iHoldFriendCard = f?.kind === 'card' && hand.has(f.card);
-    this.iAmDefender = me === g.master || iHoldFriendCard || (f?.kind === 'player' && f.seat === me) || (g.friendRevealed && g.friendSeat === me);
-    if (g.friendRevealed) this.friendKnown = g.friendSeat >= 0 ? g.friendSeat : -1;
-    else if (iHoldFriendCard) this.friendKnown = me;
-    else this.friendKnown = null;
+    // 화면 정보의 friendSeat: 공개됐으면 그 좌석(-1 없음), 내가 프렌드면 내 좌석, 모르면 null
+    this.iAmDefender = me === g.master || iHoldFriendCard || (f?.kind === 'player' && f.seat === me) || g.friendSeat === me;
+    this.friendKnown = g.friendSeat;
   }
 
   /** +1 같은 편, -1 상대 편, 그 사이는 모를 때의 기댓값 */
@@ -307,7 +306,7 @@ class Knowledge {
   }
 
   handCount(seat: number): number {
-    return this.g.hands[seat].length;
+    return this.g.handCounts[seat];
   }
 
   hiddenCount(): number {
@@ -423,10 +422,10 @@ function choosePlay(g: Game, seat: number, req: Extract<Request, { kind: 'play' 
       // 확실히 이기는 카드는 일찍 거둔다
       if (pTeam > 0.85 && card !== k.mighty && card !== JOKER) value += 0.6;
       // 주공 편은 기루다를 먼저 돌려 상대 기루다를 뺀다, 야당은 기루다 리드를 피한다
-      if (isKiruda(card, k.kiruda)) value += k.iAmDefender ? (g.hands[seat].filter((c) => isKiruda(c, k.kiruda)).length >= 3 ? 0.8 : 0.2) : -0.8;
+      if (isKiruda(card, k.kiruda)) value += k.iAmDefender ? (g.myHand.filter((c) => isKiruda(c, k.kiruda)).length >= 3 ? 0.8 : 0.2) : -0.8;
       // 조커콜: 조커가 상대 편에 있을 것 같으면 선언
       if (card === jcCard && a.jokercall) {
-        const jokerOut = !k.played.has(JOKER) && !g.hands[seat].includes(JOKER);
+        const jokerOut = !k.played.has(JOKER) && !g.myHand.includes(JOKER);
         const friendIsJoker = g.friendChoice?.kind === 'card' && g.friendChoice.card === JOKER;
         const jokerEnemy = k.iAmDefender ? !friendIsJoker : friendIsJoker || true;
         value += jokerOut && jokerEnemy ? 1.5 : -1;
