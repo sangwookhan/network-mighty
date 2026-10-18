@@ -51,6 +51,24 @@ function tone(a: AudioContext, freq: number, at: number, dur: number, type: Osci
   o.stop(t + dur + 0.02);
 }
 
+/** 짧은 잡음 덩어리 (필터 종류·주파수 지정) */
+function burst(a: AudioContext, at: number, dur: number, vol: number, type: BiquadFilterType, freq: number, q = 1) {
+  const len = Math.ceil(a.sampleRate * dur);
+  const buf = a.createBuffer(1, len, a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+  const src = a.createBufferSource();
+  src.buffer = buf;
+  const f = a.createBiquadFilter();
+  f.type = type;
+  f.frequency.value = freq;
+  f.Q.value = q;
+  const g = a.createGain();
+  g.gain.value = vol;
+  src.connect(f).connect(g).connect(a.destination);
+  src.start(a.currentTime + at);
+}
+
 /** 카드가 스치는 소리: 짧은 잡음 */
 function swish(a: AudioContext, at: number, dur = 0.09, vol = 0.25, hp = 1800) {
   const len = Math.ceil(a.sampleRate * dur);
@@ -80,8 +98,7 @@ export function play(name: SoundName) {
       swish(a, 0, 0.12, 0.3, 1200);
       break;
     case 'play':
-      swish(a, 0, 0.07, 0.35, 900);
-      tone(a, 180, 0, 0.06, 'triangle', 0.12);
+      CARD_SOUNDS.find((c) => c.id === cardSound)!.make(a);
       break;
     case 'collect':
       for (let i = 0; i < 3; i++) swish(a, i * 0.04, 0.08, 0.15, 1500);
@@ -125,4 +142,45 @@ export function say(text: string) {
   u.volume = 0.9;
   speechSynthesis.cancel(); // 앞의 말이 밀리지 않게
   speechSynthesis.speak(u);
+}
+
+/**
+ * 카드 내는 소리 후보. 들어 보고 고르는 페이지: /sounds.html
+ * cardSound 가 지금 쓰는 것.
+ */
+export const CARD_SOUNDS: { id: string; name: string; desc: string; make: (a: AudioContext) => void }[] = [
+  {
+    id: 'swish-tock', name: '1. 지금 소리 (스침 + 톡)', desc: '높은 스침에 낮은 톡',
+    make: (a) => (swish(a, 0, 0.07, 0.35, 900), tone(a, 180, 0, 0.06, 'triangle', 0.12)),
+  },
+  {
+    id: 'table-tap', name: '2. 탁 (테이블에 내려놓기)', desc: '둔하고 묵직하게 펠트에 놓는 소리',
+    make: (a) => (burst(a, 0, 0.06, 0.9, 'lowpass', 700), tone(a, 95, 0, 0.09, 'sine', 0.25)),
+  },
+  {
+    id: 'snap', name: '3. 딱 (카드 튕기기)', desc: '짧고 또렷한 고음 클릭',
+    make: (a) => (burst(a, 0, 0.025, 1.2, 'bandpass', 3200, 2), tone(a, 1800, 0, 0.03, 'square', 0.04)),
+  },
+  {
+    id: 'slide-tap', name: '4. 스윽-탁 (밀어서 놓기)', desc: '카드를 밀다가 탁 멈추는 소리',
+    make: (a) => (swish(a, 0, 0.16, 0.22, 1400), burst(a, 0.14, 0.05, 0.8, 'lowpass', 900), tone(a, 120, 0.14, 0.07, 'sine', 0.18)),
+  },
+  {
+    id: 'flick', name: '5. 팔락 (종이 넘기기)', desc: '가벼운 종이 소리 두 번',
+    make: (a) => (swish(a, 0, 0.04, 0.3, 2400), swish(a, 0.045, 0.05, 0.25, 1800)),
+  },
+  {
+    id: 'woodblock', name: '6. 똑 (나무 테이블)', desc: '나무 블록을 치는 맑은 소리',
+    make: (a) => (tone(a, 820, 0, 0.08, 'sine', 0.22), tone(a, 1640, 0, 0.04, 'sine', 0.08), burst(a, 0, 0.015, 0.5, 'highpass', 2000)),
+  },
+  {
+    id: 'chip', name: '7. 찰칵 (포커 칩)', desc: '칩끼리 부딪는 짧은 금속성 소리',
+    make: (a) => (tone(a, 2600, 0, 0.05, 'triangle', 0.08), tone(a, 3400, 0.03, 0.05, 'triangle', 0.06), burst(a, 0, 0.02, 0.6, 'highpass', 4000)),
+  },
+];
+
+let cardSound = 'swish-tock';
+/** 카드 내는 소리 바꾸기 (들어 보기 페이지용, 고른 뒤에는 기본값을 바꾼다) */
+export function setCardSound(id: string) {
+  if (CARD_SOUNDS.some((c) => c.id === id)) cardSound = id;
 }
