@@ -30,8 +30,8 @@
 .side-left { left: 6px; top: 40%; transform: translateY(-50%); flex-direction: row; align-items: flex-start; }
 .side-right { right: 6px; top: 40%; transform: translateY(-50%); flex-direction: row-reverse; align-items: flex-start; }
 .side-bottom { bottom: calc(var(--bar-h) + 10px); left: 50%; transform: translateX(-50%); }
-/* 5마·6마: 좌우 사람은 아래쪽 */
-.players-5 .side-left, .players-5 .side-right, .players-6 .side-left, .players-6 .side-right { top: 58%; }
+/* 5마·6마: 좌우 사람은 가운데보다 조금 아래 (아래쪽 채팅 창을 크게 쓸 수 있게 58%→44%) */
+.players-5 .side-left, .players-5 .side-right, .players-6 .side-left, .players-6 .side-right { top: 44%; }
 .side-bottom-left { bottom: calc(var(--bar-h) + 6px); left: 3%; flex-direction: row; align-items: flex-end; }
 .opponent .meta { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .side-left .meta { align-items: flex-start; }
