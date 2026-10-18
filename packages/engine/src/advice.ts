@@ -1,7 +1,7 @@
 // 주공 도우미: 바닥패를 받은 뒤 버릴 카드·기루다·공약·프렌드를 고른다.
 // 봇(server smartBot)과 화면('추천' 버튼, 처음 선택)이 같은 계산을 쓴다.
 
-import { JOKER, NO_SUIT, SUITS, countPoints, isKiruda, makeCard, mightyOf, powerOf, suitOf, type Card, type Suit } from './card.js';
+import { JOKER, NO_SUIT, SUITS, countPoints, isKiruda, jokercallOf, makeCard, mightyOf, powerOf, suitOf, type Card, type Suit } from './card.js';
 import { isValidFinalContract, minFinalGoal, type Contract } from './election.js';
 import { isValidFriend, type FriendSpec } from './friend.js';
 import { activePlayers, type Rules } from './rules.js';
@@ -18,6 +18,12 @@ export const HAND_PARAMS = {
   bidMargin: -3,
   /** 프렌드 없는 규칙(3마)에서 혼자 칠 때 더하는 트릭 수 */
   soloBonus: 1.0,
+  /**
+   * 버리기: 조커가 없을 때 조커콜 카드를 남기는 가치 (트릭 단위).
+   * 봇 대결(4000판×2, 프리셋 1~4)에서 손해 없이 조금 나아진 보정만 남겼다. 무늬 비우기·한 장 남은 무늬·
+   * 낮은 카드 우선·A-K-Q 연속 보정은 주공 승률이 같거나 나빠져서 넣지 않았다.
+   */
+  jokercallKeep: 0.3,
 };
 
 /** 이 패를 이 기루다로 쳤을 때 내가 딸 트릭 수 어림 */
@@ -116,12 +122,18 @@ export function bestDiscard(hand13: readonly Card[], kiruda: Suit, rules: Rules)
     const rest = hand13.filter((c) => !d.includes(c));
     const pts = countPoints(d);
     const value =
-      estimateTricks(rest, kiruda, rules) * HAND_PARAMS.pointsPerTrick +
+      (estimateTricks(rest, kiruda, rules) + discardBonus(rest, kiruda, rules)) * HAND_PARAMS.pointsPerTrick +
       (rules.discardsToOpposition ? -pts : pts) * 0.8 -
       d.filter((c) => isKiruda(c, kiruda)).length * 0.5;
     if (value > best.value) best = { discards: d, value };
   }
   return best;
+}
+
+/** estimateTricks 가 보지 않는, 버리기에서만 따지는 가치 (트릭 단위) */
+function discardBonus(rest: readonly Card[], kiruda: Suit, rules: Rules): number {
+  // 조커가 없으면 조커콜 카드로 상대의 조커를 불러낼 수 있다
+  return !rest.includes(JOKER) && rest.includes(jokercallOf(rules, kiruda)) ? HAND_PARAMS.jokercallKeep : 0;
 }
 
 export interface FinalAdvice {
