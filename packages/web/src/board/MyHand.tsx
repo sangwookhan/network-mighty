@@ -124,7 +124,11 @@ export function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards,
     const t = setTimeout(() => setReceiving(false), START + fresh.cards.length * GAP + FLY);
     return () => clearTimeout(t);
   }, [fresh]);
-  const slots = handSlots(layout.order, rules, cw, portrait ? boardWidth - 8 : Math.min(boardWidth * (boardWidth > 900 ? 0.58 : 0.86), 15 * cw), kiruda);
+  // 넓은 화면은 내 패를 오른쪽 아래에 붙인다: 판 폭의 절반까지만 펼쳐 왼쪽 아래(채팅 창)를 비워 둔다
+  // (6마는 영역이 36%부터라 그 폭에서 내 이름표 자리 약 240px 를 뺀 만큼)
+  const wideAvail = boardWidth * (room.seats.length === 6 ? 0.64 : 0.76) - 8 - 240;
+  const avail = portrait ? boardWidth - 8 : boardWidth > 900 ? Math.min(wideAvail, boardWidth * 0.5, 15 * cw) : Math.min(boardWidth * 0.86, 15 * cw);
+  const slots = handSlots(layout.order, rules, cw, avail, kiruda);
   const inHand = new Set(game.myHand);
   // 내가 주공이면 내 패의 기루다를 분홍 테두리로 (노기루다면 없음)
   const showTrump = room.me.seat !== null && game.master === room.me.seat && kiruda !== NO_SUIT;

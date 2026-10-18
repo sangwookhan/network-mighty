@@ -72,6 +72,11 @@
 .my-area { position: absolute; bottom: calc(var(--bar-h) + 6px); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 4; pointer-events: none; }
 .my-area > * { pointer-events: auto; }
 .players-6 .my-area { left: 36%; right: 0; }
+/* 넓은 화면: 내 패를 오른쪽 아래로 (왼쪽 아래는 채팅 창 자리). 6마는 왼쪽 아래 사람이 있어 원래부터 오른쪽 */
+@media (min-width: 901px) {
+  .board:not(.portrait) .my-area { left: 24%; right: 10px; align-items: flex-end; }
+  .board.players-6:not(.portrait) .my-area { left: 36%; }
+}
 .my-row { display: flex; align-items: flex-end; gap: 10px; }
 .my-hand-cards { position: relative; height: var(--ch); transition: width 0.35s ease; }
 .my-hand-cards .slot { position: absolute; top: 0; transition: left 0.35s ease; }
