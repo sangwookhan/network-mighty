@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 vi.setConfig({ testTimeout: 30_000 });
 import { NO_SUIT, SUITS, goalRange, isValidBid, type Bid } from '@mighty/engine';
 import type { ClientMessage, GameAction, RoomView, ServerMessage } from '@mighty/protocol';
+import { BOTS } from '../src/bots.js';
 import { Hub } from '../src/hub.js';
 
 const FAST = { botDelayMs: 1, trickPauseMs: 1, redealPauseMs: 1 };
@@ -244,6 +245,27 @@ describe('통합: 사람 3명 + 봇', () => {
     await until(() => a.room?.status === 'playing');
     expect(a.room!.seats.filter((s) => s.occupant === 'bot').map((s) => s.nickname)).toEqual(['태우', '두환']);
     hub.closeRoom(hub.rooms.get(a.room!.id)!);
+  });
+
+  it('봇이 예외를 던져도 서버는 멈추지 않고, 낼 수 있는 수로 대신 진행한다', async () => {
+    const real = BOTS.smart;
+    let failures = 0;
+    BOTS.smart = (g, seat, req) => {
+      // 절반은 예외, 절반은 규칙에 어긋난 수
+      failures++;
+      if (failures % 2) throw new Error('봇 고장 (테스트)');
+      return req.kind === 'play' ? { kind: 'play', card: 0 } : real(g, seat, req);
+    };
+    try {
+      const { hub, a, b, c } = await setup(1);
+      a.send({ t: 'start' });
+      await until(() => [a, b, c].every((x) => x.dealsFinished.size >= 2), 20_000);
+      expect(failures).toBeGreaterThan(10);
+      expect([a, b, c].flatMap((x) => x.errors)).toEqual([]);
+      hub.closeRoom(hub.rooms.get(a.room!.id)!);
+    } finally {
+      BOTS.smart = real;
+    }
   });
 
   it('사람이 모두 나가면 방이 닫힌다', async () => {

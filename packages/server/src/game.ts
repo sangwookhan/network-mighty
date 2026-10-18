@@ -247,12 +247,70 @@ export class Game {
     }
   }
 
+  /**
+   * 봇(또는 시간 초과로 대신하는 봇)이 결정한다. 이 함수는 타이머에서 불리므로 예외가 밖으로 나가면
+   * 서버 프로세스 전체가 죽는다. 봇이 실패하거나 규칙에 어긋난 수를 내면 로그를 남기고 대체 수로 진행한다.
+   */
   private botAct(seat: number): void {
     const p = this.pending.get(seat);
     if (!p) return;
-    const action = decideFor(this.host.botKind?.(seat) ?? 'smart', this, seat, p.req);
-    if (!p.validate(action)) throw new Error(`bot produced invalid action ${JSON.stringify(action)}`);
+    let action: GameAction | null = null;
+    try {
+      action = decideFor(this.host.botKind?.(seat) ?? 'smart', this, seat, p.req);
+      if (!p.validate(action)) {
+        console.error(`[game] 봇이 규칙에 어긋난 수를 냄 (좌석 ${seat}):`, JSON.stringify(action));
+        action = null;
+      }
+    } catch (e) {
+      console.error(`[game] 봇 결정 중 오류 (좌석 ${seat}, 요청 ${p.req.kind}):`, e);
+    }
+    action ??= this.fallbackAction(seat, p.req);
+    if (!action || !p.validate(action)) {
+      // 여기까지 오면 엔진/진행기 버그: 이 방의 게임만 끝낸다
+      console.error(`[game] 대체 수도 찾지 못함 (좌석 ${seat}, 요청 ${p.req.kind}). 게임을 중단합니다`);
+      p.reject(new Error('no valid action'));
+      this.pending.delete(seat);
+      return;
+    }
     this.complete(seat, action);
+  }
+
+  /** 규칙상 가능한 가장 단순한 수 (봇이 실패했을 때) */
+  private fallbackAction(seat: number, req: Request): GameAction | null {
+    const rules = this.rules;
+    const hand = this.hands[seat];
+    switch (req.kind) {
+      case 'bid': {
+        const es = this.election!;
+        if (isValidBid(es, { type: 'pass' }, hand, rules)) return { kind: 'bid', bid: { type: 'pass' } };
+        for (let goal = 1; goal <= 25; goal++)
+          for (const kiruda of [NO_SUIT, 1, 2, 3, 4] as Suit[]) {
+            const bid = { type: 'bid' as const, kiruda, goal };
+            if (isValidBid(es, bid, hand, rules)) return { kind: 'bid', bid };
+          }
+        return null;
+      }
+      case 'kill': {
+        for (let card = 1; card <= 53; card++) if (!hand.includes(card) && !req.failed.includes(card)) return { kind: 'kill', card };
+        return null;
+      }
+      case 'final': {
+        const contract = this.electedContract!;
+        const choices: FriendChoice[] = [{ kind: 'none' }, { kind: 'firstTrick' }];
+        for (let i = 0; i + 2 < hand.length; i++) {
+          const discards = hand.filter((c) => c !== JOKER).slice(i, i + 3);
+          for (const friend of choices) {
+            const a: GameAction = { kind: 'final', discards, contract, friend };
+            if (this.validateFinal(a)) return a;
+          }
+        }
+        return null;
+      }
+      case 'play':
+        return { kind: 'play', card: req.legal[0], jokerSuit: 1 };
+      case 'continue':
+        return { kind: 'continue', cont: true };
+    }
   }
 
   private complete(seat: number, action: GameAction): void {

@@ -15,6 +15,10 @@ const webRoot = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../web
 
 const hub = new Hub();
 
+// 마지막 안전망: 처리되지 않은 오류로 서버 전체가 죽지 않게 로그만 남긴다
+process.on('uncaughtException', (e) => console.error('[server] 처리되지 않은 오류:', e));
+process.on('unhandledRejection', (e) => console.error('[server] 처리되지 않은 거부:', e));
+
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript',
