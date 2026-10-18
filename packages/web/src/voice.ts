@@ -59,9 +59,9 @@ export function useVoice(): VoiceSettings {
 const speakable = (text: string) => text.replace(/[♠◆♥♣]/g, '').replace(/\s+/g, ' ').trim();
 
 /** 우선순위: 밀릴 때 낮은 것부터 버린다 (방 소식·결과처럼 드물고 중요한 것은 남긴다) */
-const PRIORITY: Record<VoiceKind, number> = { room: 3, result: 3, contract: 3, friend: 3, turn: 3, deal: 2, callout: 2, bid: 1, trick: 1 };
-const MAX_WAIT = 3; // 기다리는 말 수
-const STALE_MS: Record<VoiceKind, number> = { room: 15000, result: 10000, contract: 10000, friend: 10000, turn: 4000, deal: 8000, callout: 2500, bid: 4000, trick: 3000 };
+const PRIORITY: Record<VoiceKind, number> = { room: 3, result: 3, contract: 3, friend: 3, turn: 3, deal: 2, callout: 2, bid: 2, trick: 1 };
+const MAX_WAIT = 4; // 기다리는 말 수
+const STALE_MS: Record<VoiceKind, number> = { room: 15000, result: 10000, contract: 10000, friend: 10000, turn: 4000, deal: 8000, callout: 2500, bid: 7000, trick: 3000 };
 
 interface Item {
   kind: VoiceKind;

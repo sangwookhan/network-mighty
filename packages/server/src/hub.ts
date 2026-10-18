@@ -312,6 +312,8 @@ export class Room implements GameHost {
     if (seat !== null) {
       this.systemChat(`${user.nickname}님의 연결이 끊겼습니다. 돌아올 때까지 봇이 대신 칩니다`);
       this.game?.occupantChanged(seat);
+    } else if (this.spectators.has(user.id)) {
+      this.systemChat(`관전 중인 ${user.nickname}님의 연결이 끊겼습니다`);
     }
     this.changed();
   }

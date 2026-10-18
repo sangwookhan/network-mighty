@@ -19,7 +19,7 @@ export function useGameVoice(room: RoomView, game: GameView) {
     // 각자 공약 (내 것과 딜 미스는 빼고: 딜 미스는 서버 안내로 읽는다)
     // (선거가 끝나는 마지막 공약은 당선 안내가 먼저 오므로 읽지 않는다)
     if (now.deal === p.deal && now.log > p.log && game.phase === 'election' && game.master === null)
-      for (const e of log.slice(p.log)) if (e.seat !== me && e.bid.type !== 'dealMiss') speak('bid', `${room.seats[e.seat]?.nickname}, ${bidText(e.bid)}`);
+      for (const e of log.slice(p.log)) if (e.seat !== me && e.bid.type !== 'dealMiss') speak('bid', e.bid.type === 'pass' ? `${room.seats[e.seat]?.nickname}님 출마 포기` : `${room.seats[e.seat]?.nickname}님 ${bidText(e.bid)} 출마`);
     // 트릭 가져감
     if (now.trickDone && now.trickDone !== p.trickDone) speak('trick', game.lastTrick!.winner === me ? '내가 가져감' : `${room.seats[game.lastTrick!.winner]?.nickname}님 가져감`);
     // 내 차례
