@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+
+# 원작(제3자 저작물)에서 나온 로컬 분석 자료. 다시 만드는 방법: re/tools/README.md
+re/decompiled/
+re/resources/
+re/mockups/
+re/screenshots/

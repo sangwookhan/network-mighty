@@ -1,0 +1,13 @@
+{
+  "name": "web-mighty",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @mighty/server",
+    "start": "npm run build -w @mighty/web && npm start -w @mighty/server",
+    "test": "npm test -w @mighty/engine && npm test -w @mighty/server",
+    "typecheck": "npm run typecheck -w @mighty/engine && npm run typecheck -w @mighty/server && npm run typecheck -w @mighty/web"
+  }
+}
