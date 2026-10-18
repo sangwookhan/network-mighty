@@ -2,7 +2,7 @@
 // 내 패는 아래에 앞면으로 펼치고, 다른 사람은 판 가장자리에 뒷면으로 둘러앉는다.
 // 공약·안내는 원작의 반투명 상자(DSB)처럼 판 위에 띄운다.
 
-import { JOKER, NO_SUIT, isKiruda, jokercallOf, mightyOf, plainCardName, type Bid, type Card, type Suit } from '@mighty/engine';
+import { JOKER, NO_SUIT, isKiruda, jokercallOf, mightyOf, plainCardName, suitOf, type Bid, type Card, type Suit } from '@mighty/engine';
 import type { GameView, RoomView, SeatView } from '@mighty/protocol';
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { CardBackView, CardView, SUIT_NAME, SUIT_SYMBOL, contractText, shortName, sortHand } from './cards.js';
@@ -93,6 +93,34 @@ export function Board({ room, game }: { room: RoomView; game: GameView }) {
       )}
     </div>
   );
+}
+
+/** 내가 낸 카드가 내 패의 어느 자리에서 날아가는지 (화면 좌표) */
+const flyFrom = new Map<Card, DOMRect>();
+
+/** 카드를 내면서, 그 카드가 내 패에 있던 자리를 기억해 둔다 */
+function playCard(a: { kind: 'play'; card: Card; jokerSuit?: Suit; jokercall?: boolean }) {
+  const el = document.querySelector(`.my-hand-cards [data-card="${a.card}"]`);
+  if (el) flyFrom.set(a.card, el.getBoundingClientRect());
+  act(a);
+}
+
+/** 무늬별로 묶어 고정 자리를 정한다 (무늬 사이에 틈). 마이티·조커는 맨 앞 묶음 */
+function handSlots(order: readonly Card[], rules: RoomView['rules'], cw: number, avail: number): { x: Map<Card, number>; width: number } {
+  const mighty = mightyOf(rules, NO_SUIT);
+  const groupOf = (c: Card) => (c === mighty || c === JOKER ? 0 : suitOf(c));
+  let groups = 0;
+  for (let i = 1; i < order.length; i++) if (groupOf(order[i]) !== groupOf(order[i - 1])) groups++;
+  const gap = cw * 0.22;
+  const n = order.length;
+  const step = n > 1 ? Math.max(cw * 0.22, Math.min(cw + 2, (avail - cw - groups * gap) / (n - 1))) : cw;
+  const x = new Map<Card, number>();
+  let pos = 0;
+  order.forEach((c, i) => {
+    if (i > 0) pos += step + (groupOf(c) !== groupOf(order[i - 1]) ? gap : 0);
+    x.set(c, pos);
+  });
+  return { x, width: n ? pos + cw : cw };
 }
 
 /** 공약 상자: 주공, 기루다·공약, 프렌드 조건(카드면 그림으로)과 공개된 프렌드를 한눈에 */
@@ -371,15 +399,25 @@ function TrickCard({ card, room, kiruda, at, from, flyTo, winner }: {
   winner: boolean;
 }) {
   const [arrived, setArrived] = useState(false);
-  useEffect(() => {
+  const ref = useRef<HTMLDivElement>(null);
+  // 내가 낸 카드는 내 패에 있던 자리에서 출발한다 (화면 좌표 → 가운데 기준 px)
+  const [fromPx, setFromPx] = useState<[number, number] | null>(null);
+  useLayoutEffect(() => {
+    const r = flyFrom.get(card);
+    const origin = ref.current?.parentElement?.getBoundingClientRect();
+    if (r && origin) {
+      flyFrom.delete(card);
+      setFromPx([r.left + r.width / 2 - origin.left, r.top + r.height / 2 - origin.top]);
+    }
     const id = requestAnimationFrame(() => requestAnimationFrame(() => setArrived(true)));
     return () => cancelAnimationFrame(id);
-  }, []);
+  }, [card]);
+  const start = fromPx ? `translate(calc(-50% + ${fromPx[0]}px), calc(-50% + ${fromPx[1]}px))` : offsetTransform(from, ' scale(0.8)');
   const style: CSSProperties = flyTo
     ? { transform: offsetTransform(flyTo, ' scale(0.5)'), opacity: 0 }
-    : { transform: offsetTransform(arrived ? at : from, arrived ? '' : ' scale(0.8)') };
+    : { transform: arrived ? offsetTransform(at) : start };
   return (
-    <div className={`trick-card ${winner ? 'winner' : ''} ${flyTo ? 'flying' : ''}`} style={style}>
+    <div ref={ref} className={`trick-card ${winner ? 'winner' : ''} ${flyTo ? 'flying' : ''}`} style={style}>
       <CardView card={card} rules={room.rules} kiruda={kiruda} />
     </div>
   );
@@ -453,18 +491,26 @@ function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards, setDis
   const req = game.myRequest?.kind === 'play' ? game.myRequest : null;
   const [ask, setAsk] = useState<'jokerSuit' | 'jokercall' | null>(null);
   const jc = jokercallOf(rules, kiruda);
-  const hand = sortHand(game.myHand, rules, kiruda);
-  // 판 폭에 맞게 겹쳐서 펼친다
-  // 넓은 화면에서는 왼쪽 아래 채팅 창과 겹치지 않도록 가운데 58%만 쓴다
-  const avail = portrait ? boardWidth - 8 : Math.min(boardWidth * (boardWidth > 900 ? 0.58 : 0.86), 13 * cw);
-  const step = hand.length > 1 ? Math.min(cw + 2, (avail - cw) / (hand.length - 1)) : cw;
+  // 내 패 배치: 판 동안 처음 정렬 순서와 자리를 고정한다 (카드를 내도 나머지는 움직이지 않는다).
+  // 다시 배치하는 때: 새 판, 바닥패를 받거나(카드가 늘어남) 버린 뒤 플레이가 시작될 때. 이때는 미끄러지듯 이동한다.
+  const group = game.phase === 'final' ? 'final' : game.phase === 'play' || game.phase === 'result' ? 'play' : 'deal';
+  const layoutKey = `${game.dealNo}:${group}`;
+  const layoutRef = useRef<{ key: string; order: Card[] } | null>(null);
+  let layout = layoutRef.current;
+  if (!layout || layout.key !== layoutKey || game.myHand.some((c) => !layout!.order.includes(c))) {
+    // 기루다와 상관없는 순서(마이티·조커 → ♠◆♥♣)로 한 번 정렬하고 판 내내 유지
+    layout = { key: layoutKey, order: sortHand(game.myHand, rules, NO_SUIT) };
+    layoutRef.current = layout;
+  }
+  const slots = handSlots(layout.order, rules, cw, portrait ? boardWidth - 8 : Math.min(boardWidth * (boardWidth > 900 ? 0.58 : 0.86), 15 * cw));
+  const inHand = new Set(game.myHand);
   const seat = room.seats[room.me.seat!];
 
   const play = (card: Card) => {
     if (!req) return;
     if (card === JOKER && req.mustDeclareJokerSuit) return setAsk('jokerSuit');
     if (card === jc && req.canJokercall) return setAsk('jokercall');
-    act({ kind: 'play', card });
+    playCard({ kind: 'play', card });
   };
   useEffect(() => setAsk(null), [game.myRequestId]);
   const toggleDiscard = (c: Card) => setDiscards((d) => (d.includes(c) ? d.filter((x) => x !== c) : d.length < 3 ? [...d, c] : d));
@@ -478,7 +524,7 @@ function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards, setDis
         <Dsb title="조커로 선을 잡습니다" className="dsb-inline">
           무늬를 고르세요{' '}
           {[1, 2, 3, 4].map((s) => (
-            <button key={s} onClick={() => (setAsk(null), act({ kind: 'play', card: JOKER, jokerSuit: s as Suit }))}>
+            <button key={s} onClick={() => (setAsk(null), playCard({ kind: 'play', card: JOKER, jokerSuit: s as Suit }))}>
               {SUIT_SYMBOL[s]} {SUIT_NAME[s]}
             </button>
           ))}
@@ -487,17 +533,17 @@ function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards, setDis
       )}
       {ask === 'jokercall' && (
         <Dsb title="조커콜 카드입니다" className="dsb-inline">
-          <button className="primary" onClick={() => (setAsk(null), act({ kind: 'play', card: jc, jokercall: true }))}>
+          <button className="primary" onClick={() => (setAsk(null), playCard({ kind: 'play', card: jc, jokercall: true }))}>
             조커콜!
           </button>
-          <button onClick={() => (setAsk(null), act({ kind: 'play', card: jc, jokercall: false }))}>조커콜 안 함</button>
+          <button onClick={() => (setAsk(null), playCard({ kind: 'play', card: jc, jokercall: false }))}>조커콜 안 함</button>
           <button onClick={() => setAsk(null)}>취소</button>
         </Dsb>
       )}
       <div className="my-row">
-        <div className="my-hand-cards" style={{ width: hand.length ? step * (hand.length - 1) + cw : cw }}>
-          {hand.map((c, i) => (
-            <div key={c} className="slot" style={{ left: i * step }}>
+        <div className="my-hand-cards" style={{ width: slots.width }}>
+          {layout.order.filter((c) => inHand.has(c)).map((c) => (
+            <div key={c} className="slot" style={{ left: slots.x.get(c) }}>
               <CardView
                 card={c}
                 rules={rules}

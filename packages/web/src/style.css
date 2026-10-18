@@ -402,3 +402,7 @@ header .spacer { flex: 1; }
 /* 공약 상자(왼쪽 위)와 겹치지 않도록 위쪽 두 사람을 조금 안쪽으로 */
 .side-top-left { left: 31%; }
 .side-top-right { left: 69%; }
+
+/* 내 패: 다시 배치할 때 미끄러지듯 이동 */
+.my-hand-cards .slot { transition: left 0.35s ease; }
+.my-hand-cards { transition: width 0.35s ease; }
