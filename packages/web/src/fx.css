@@ -1,0 +1,4 @@
+/* 효과: 효과음 켬/끔 */
+
+.status-bar .sound-toggle { font-size: 12px; padding: 0 6px; height: 18px; line-height: 16px; cursor: pointer; }
+.status-bar .sound-toggle.off { color: #777; }

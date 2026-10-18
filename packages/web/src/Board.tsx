@@ -8,6 +8,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import { CardBackView, CardView, SUIT_NAME, SUIT_SYMBOL, contractText, shortName, sortHand } from './cards.js';
 import { act, send } from './net.js';
 import { BidPanel, FinalPanel, KillPanel, ResultPanel, recommendKiruda } from './panels.js';
+import { play as sfx, setSoundEnabled, useSoundEnabled } from './sound.js';
+import './fx.css';
 
 type Side = 'bottom-left' | 'left' | 'top-left' | 'top' | 'top-right' | 'right';
 type MySide = 'bottom' | 'bottom-right';
@@ -62,6 +64,8 @@ export function Board({ room, game }: { room: RoomView; game: GameView }) {
     req?.kind === 'bid' && !!game.election && game.election.best === null && !isValidBid(game.election, { type: 'pass' }, game.myHand, room.rules);
   const kirudaChoice = bidKiruda && bidKiruda.deal === game.dealNo ? bidKiruda.kiruda : forcedFirst ? NO_SUIT : recommended;
 
+  useGameSounds(room, game);
+
   const style = { '--cw': `${cw}px`, '--ch': `${ch}px`, '--s': scale } as CSSProperties;
   return (
     <div className={`board players-${n} ${portrait ? 'portrait' : ''}`} ref={ref} style={style}>
@@ -96,6 +100,30 @@ export function Board({ room, game }: { room: RoomView; game: GameView }) {
       )}
     </div>
   );
+}
+
+/** 판의 변화에 맞춰 효과음을 낸다 (처음 그릴 때는 조용히) */
+function useGameSounds(room: RoomView, game: GameView) {
+  const prev = useRef<{ deal: number; phase: string; req: number | null; trick: string } | null>(null);
+  useEffect(() => {
+    const cards = game.trick?.cards.length ?? 0;
+    const now = { deal: game.dealNo, phase: game.phase, req: game.myRequestId, trick: `${game.dealNo}:${game.turn}:${cards}` };
+    const p = prev.current;
+    prev.current = now;
+    if (!p) return;
+    if (now.deal !== p.deal) sfx('shuffle');
+    if (now.trick !== p.trick && cards > 0) sfx('play');
+    if (now.req !== null && now.req !== p.req) {
+      const kind = game.myRequest?.kind;
+      // 당선: 축하음 (바닥패 받는 소리는 내 패 애니메이션이 낸다)
+      if (kind === 'final') sfx('elected');
+      else if (kind === 'play' || kind === 'bid' || kind === 'kill') sfx('turn');
+    }
+    const me = room.me.seat;
+    if (now.phase === 'result' && p.phase !== 'result' && game.result && me !== null) {
+      sfx(game.result.after[me] >= game.result.before[me] ? 'win' : 'lose');
+    }
+  });
 }
 
 /** 내가 낸 카드가 내 패의 어느 자리에서 날아가는지 (화면 좌표) */
@@ -341,7 +369,7 @@ function Center({ room, game, sideOf, kiruda }: { room: RoomView; game: GameView
   useEffect(() => {
     if (!complete) return;
     setCollect({ key: trickKey, stage: 'show' });
-    const t1 = setTimeout(() => setCollect({ key: trickKey, stage: 'fly' }), SHOW_MS);
+    const t1 = setTimeout(() => (setCollect({ key: trickKey, stage: 'fly' }), sfx('collect')), SHOW_MS);
     const t2 = setTimeout(() => setCollect({ key: trickKey, stage: 'gone' }), SHOW_MS + FLY_MS);
     return () => (clearTimeout(t1), clearTimeout(t2));
   }, [complete, trickKey]);
@@ -457,8 +485,18 @@ function StatusBar({ room, game }: { room: RoomView; game: GameView }) {
       {room.paused && <span className="paused-tag">일시정지</span>}
       {room.me.seat === null && <span className="spectating">관전 중</span>}
       <span className="spacer" />
+      <SoundToggle />
       <span>{game.dealNo}번째 판{game.phase === 'play' ? ` · ${game.turn + 1}/10` : ''}</span>
     </div>
+  );
+}
+
+function SoundToggle() {
+  const on = useSoundEnabled();
+  return (
+    <button className={`sound-toggle ${on ? 'on' : 'off'}`} onClick={() => setSoundEnabled(!on)} title={on ? '효과음 끄기' : '효과음 켜기'} aria-pressed={on}>
+      ♪ 소리 {on ? '켬' : '끔'}
+    </button>
   );
 }
 
