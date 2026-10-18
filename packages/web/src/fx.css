@@ -1,4 +1,21 @@
-/* 효과: 효과음 켬/끔 */
+/* 효과: 당선 뒤 바닥패 받기, 효과음 켬/끔 */
+
+/* 날아오는 동안에는 축하 상자 위로 */
+.my-area.receiving { z-index: 8; }
+
+/* 새로 받은 바닥패: 노란 빛과 '새 카드' 표시 (정리가 끝날 때까지) */
+.my-hand-cards .slot.fresh::after {
+  content: ''; position: absolute; inset: -3px; border-radius: 6px; pointer-events: none;
+  box-shadow: 0 0 0 2px #ffd54f, 0 0 12px 3px rgba(255, 213, 79, 0.75);
+  animation: fresh-pulse 0.8s ease-in-out 1.6s 4 alternate;
+}
+.my-hand-cards .slot.fresh::before {
+  content: '새 카드'; position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -4px);
+  font-size: 11px; font-weight: bold; color: #000; background: #ffd54f; padding: 0 5px; border-radius: 3px;
+  white-space: nowrap; pointer-events: none; z-index: 1;
+}
+@keyframes fresh-pulse { to { box-shadow: 0 0 0 2px #fff59d, 0 0 20px 6px rgba(255, 213, 79, 0.95); } }
+.fresh-note { color: #ffd54f; font-weight: bold; }
 
 .status-bar .sound-toggle { font-size: 12px; padding: 0 6px; height: 18px; line-height: 16px; cursor: pointer; }
 .status-bar .sound-toggle.off { color: #777; }

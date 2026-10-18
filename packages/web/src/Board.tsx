@@ -538,12 +538,54 @@ function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards, setDis
   const group = game.phase === 'final' ? 'final' : game.phase === 'play' || game.phase === 'result' ? 'play' : 'deal';
   const layoutKey = `${game.dealNo}:${group}`;
   const layoutRef = useRef<{ key: string; order: Card[] } | null>(null);
+  // 당선 뒤 새로 받은 바닥패: 판 가운데에서 날아와 정리가 끝날 때까지 표시한다
+  const freshRef = useRef<{ key: string; cards: Card[]; shown: boolean } | null>(null);
   let layout = layoutRef.current;
   if (!layout || layout.key !== layoutKey || game.myHand.some((c) => !layout!.order.includes(c))) {
+    const before = layout;
     // 기루다와 상관없는 순서(마이티·조커 → ♠◆♥♣)로 한 번 정렬하고 판 내내 유지
     layout = { key: layoutKey, order: sortHand(game.myHand, rules, NO_SUIT) };
     layoutRef.current = layout;
+    if (group === 'final' && before?.key === `${game.dealNo}:deal`) {
+      const cards = layout.order.filter((c) => !before.order.includes(c));
+      if (cards.length > 0) freshRef.current = { key: layoutKey, cards, shown: false };
+    }
   }
+  const fresh = freshRef.current?.key === layoutKey ? freshRef.current : null;
+  const handRef = useRef<HTMLDivElement>(null);
+  const [receiving, setReceiving] = useState(false);
+  useLayoutEffect(() => {
+    if (!fresh || fresh.shown) return;
+    fresh.shown = true;
+    const box = handRef.current;
+    const center = box?.closest('.board')?.querySelector('.center')?.getBoundingClientRect();
+    if (!box || !center) return;
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const START = 450; // 축하 상자가 먼저 뜨고 나서
+    const GAP = 320;
+    const FLY = 600;
+    fresh.cards.forEach((c, i) => {
+      const el = box.querySelector<HTMLElement>(`[data-slot="${c}"]`);
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const dx = center.left - (r.left + r.width / 2);
+      const dy = center.top - (r.top + r.height / 2);
+      const delay = START + i * GAP;
+      if (!still) {
+        el.animate(
+          [
+            { transform: `translate(${dx}px, ${dy}px) scale(0.8) rotate(${(i - 1) * 10}deg)`, opacity: 0.6 },
+            { transform: 'none', opacity: 1 },
+          ],
+          { duration: FLY, delay, easing: 'cubic-bezier(.2,.8,.25,1)', fill: 'backwards' },
+        );
+      }
+      setTimeout(() => sfx('deal'), delay);
+    });
+    setReceiving(true);
+    const t = setTimeout(() => setReceiving(false), START + fresh.cards.length * GAP + FLY);
+    return () => clearTimeout(t);
+  }, [fresh]);
   const slots = handSlots(layout.order, rules, cw, portrait ? boardWidth - 8 : Math.min(boardWidth * (boardWidth > 900 ? 0.58 : 0.86), 15 * cw));
   const inHand = new Set(game.myHand);
   const seat = room.seats[room.me.seat!];
@@ -559,9 +601,13 @@ function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards, setDis
   const discarding = discards !== null;
 
   return (
-    <div className="my-area">
+    <div className={`my-area ${receiving ? 'receiving' : ''}`}>
       {req && !ask && <div className="my-prompt">내 차례입니다. 낼 카드를 고르세요</div>}
-      {discarding && <div className="my-prompt">버릴 카드 3장을 눌러 올리세요 ({discards.length}/3)</div>}
+      {discarding && (
+        <div className="my-prompt">
+          {fresh && <span className="fresh-note">바닥패 {fresh.cards.length}장을 받았습니다 · </span>}버릴 카드 3장을 눌러 올리세요 ({discards.length}/3)
+        </div>
+      )}
       {ask === 'jokerSuit' && (
         <Dsb title="조커로 선을 잡습니다" className="dsb-inline">
           무늬를 부르세요{' '}
@@ -591,9 +637,9 @@ function MyHand({ room, game, kiruda, boardWidth, cw, portrait, discards, setDis
         </Dsb>
       )}
       <div className="my-row">
-        <div className="my-hand-cards" style={{ width: slots.width }}>
+        <div className="my-hand-cards" style={{ width: slots.width }} ref={handRef}>
           {layout.order.filter((c) => inHand.has(c)).map((c) => (
-            <div key={c} className="slot" style={{ left: slots.x.get(c) }}>
+            <div key={c} className={`slot ${fresh?.cards.includes(c) ? 'fresh' : ''}`} data-slot={c} style={{ left: slots.x.get(c) }}>
               <CardView
                 card={c}
                 rules={rules}
