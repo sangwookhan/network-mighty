@@ -268,6 +268,33 @@ describe('통합: 사람 3명 + 봇', () => {
     }
   });
 
+  it('잘못된 형식의 메시지는 거절하고 방 상태를 바꾸지 않는다', async () => {
+    const { hub, a, roomId } = await setup(3); // 3마: 자리 0~2
+    const bad: unknown[] = [
+      { t: 'sit', seat: '__proto__' },
+      { t: 'addBot', seat: 99 },
+      { t: 'addBot', seat: 1.5 },
+      { t: 'removeBot', seat: -1 },
+      { t: 'chat', text: { evil: true } },
+      { t: 'createRoom', name: 123, presetId: 'x', turnSeconds: null },
+      { t: 'setRoom', presetId: 1e9 },
+      { t: 'kick', playerId: ['x'] },
+      { t: 'pause', paused: 'yes' },
+      { t: 'action', requestId: 'a', action: { kind: 'play', card: 1 } },
+      { t: 'action', requestId: 1, action: { kind: 'bid', bid: { type: 'bid', kiruda: 9, goal: 'x' } } },
+      { t: 'nope' },
+      null,
+      42,
+    ];
+    const before = JSON.stringify(hub.rooms.get(roomId)!.seats);
+    const errorsBefore = a.errors.length;
+    for (const m of bad) a.send(m as ClientMessage);
+    await until(() => a.errors.length >= errorsBefore + bad.length);
+    expect(JSON.stringify(hub.rooms.get(roomId)!.seats)).toBe(before);
+    expect(Object.getPrototypeOf(hub.rooms.get(roomId)!.seats)).toBe(Array.prototype);
+    hub.closeRoom(hub.rooms.get(roomId)!);
+  });
+
   it('사람이 모두 나가면 방이 닫힌다', async () => {
     const { hub, a, b, c, roomId } = await setup(1);
     a.send({ t: 'start' });

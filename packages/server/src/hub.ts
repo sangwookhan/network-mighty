@@ -2,7 +2,7 @@
 
 import { randomBytes, randomInt } from 'node:crypto';
 import { PRESETS, describePreset, presetRules, type Rules } from '@mighty/engine';
-import type { ChatLine, ClientMessage, RoomSummary, RoomView, SeatView, ServerMessage } from '@mighty/protocol';
+import { parseClientMessage, type ChatLine, type ClientMessage, type RoomSummary, type RoomView, type SeatView, type ServerMessage } from '@mighty/protocol';
 import { DEFAULT_TIMING, Game, type GameHost, type Timing } from './game.js';
 
 export interface Connection {
@@ -59,10 +59,13 @@ export class Hub {
   // ---- 연결 ----
 
   /** 새 연결. hello 를 받기 전까지는 user 가 없다 */
-  connect(conn: Connection): { onMessage(msg: ClientMessage): void; onClose(): void } {
+  connect(conn: Connection): { onMessage(raw: unknown): void; onClose(): void } {
     let user: User | null = null;
     return {
-      onMessage: (msg) => {
+      onMessage: (raw) => {
+        // 형식이 틀린 메시지는 처리하지 않는다 (타입은 실행 중에 아무것도 막지 않음)
+        const msg = parseClientMessage(raw);
+        if (!msg) return conn.send({ t: 'error', message: '잘못된 요청입니다' });
         if (!user) {
           if (msg?.t !== 'hello') return conn.send({ t: 'needNickname' });
           user = this.hello(conn, msg);

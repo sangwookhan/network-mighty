@@ -6,7 +6,6 @@ import { createServer } from 'node:http';
 import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
-import type { ClientMessage } from '@mighty/protocol';
 import { Hub } from './hub.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -53,7 +52,7 @@ async function main() {
       close: () => ws.close(),
     });
     ws.on('message', (data) => {
-      let msg: ClientMessage;
+      let msg: unknown;
       try {
         msg = JSON.parse(String(data));
       } catch {

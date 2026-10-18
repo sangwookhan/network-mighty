@@ -150,3 +150,4 @@ export interface GameView {
     continueVotes: (boolean | null)[];
   } | null;
 }
+export * from './validate.js';
