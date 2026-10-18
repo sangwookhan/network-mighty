@@ -372,6 +372,27 @@ describe('통합: 사람 3명 + 봇', () => {
     hub.closeRoom(room);
   });
 
+  it('대기실에서 창을 닫으면 바로 퇴장 안내, 30초 안에 다시 접속하면 그 방으로 돌아온다', async () => {
+    const { hub, a, b, c, roomId } = await setup(1);
+    const bName = (r: RoomView | null) => r?.seats.some((s) => s.nickname === '나' && s.occupant === 'human') ?? false;
+    expect(bName(a.room)).toBe(true);
+    b.disconnect();
+    await until(() => !!a.room?.chat.some((l) => l.text === '나님이 퇴장했습니다'));
+    expect(bName(a.room)).toBe(false);
+    // 새로고침처럼 곧바로 다시 접속
+    b.connect();
+    await until(() => bName(a.room) && b.room?.id === roomId);
+    expect(a.room!.chat.at(-1)?.text).toBe('나님이 들어왔습니다');
+    // 혼자 남은 사람은 바로 내보내지 않는다 (방이 사라지지 않게)
+    a.send({ t: 'leaveRoom' });
+    b.send({ t: 'leaveRoom' });
+    await until(() => hub.rooms.get(roomId)?.summary().humans === 1);
+    c.disconnect();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(hub.rooms.has(roomId)).toBe(true);
+    hub.closeRoom(hub.rooms.get(roomId)!);
+  });
+
   it('프로토콜 버전이 다르면 접속을 거절한다', async () => {
     const hub = new Hub({ timing: FAST });
     const got: ServerMessage[] = [];

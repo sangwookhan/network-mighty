@@ -31,6 +31,8 @@ const iGa = (name: string) => {
   return c >= 0 && c < 11172 && c % 28 !== 0 ? '이' : '가';
 };
 const MAX_CHAT = 100;
+/** 대기실·관전 중에 창을 닫았다가 이 안에 다시 접속하면 그 방으로 돌아간다 (새로고침 대비) */
+const REJOIN_MS = 30_000;
 
 export interface User {
   id: string;
@@ -39,6 +41,8 @@ export interface User {
   conn: Connection | null;
   roomId: string | null;
   graceTimer?: ReturnType<typeof setTimeout>;
+  /** 창을 닫아 바로 퇴장한 방 (잠깐 안에 다시 접속하면 그 방으로 돌려보낸다) */
+  rejoin?: { roomId: string; until: number };
 }
 
 interface Seat {
@@ -117,7 +121,10 @@ export class Hub {
     clearTimeout(user.graceTimer);
     conn.send({ t: 'welcome', token: user.token, playerId: user.id, nickname: user.nickname });
     const room = user.roomId ? this.rooms.get(user.roomId) : undefined;
+    const back = !room && user.rejoin && user.rejoin.until > Date.now() ? this.rooms.get(user.rejoin.roomId) : undefined;
+    user.rejoin = undefined;
     if (room) room.reconnected(user);
+    else if (back) back.join(user); // 새로고침 등으로 잠깐 끊겼던 사람은 나갔던 방으로
     else this.sendLobby(user);
     this.broadcastLobby();
     return user;
@@ -309,11 +316,17 @@ export class Room implements GameHost {
 
   disconnected(user: User): void {
     const seat = this.seatOf(user.id);
+    // 대기실에 있거나 관전 중이면 맡은 것이 없으므로 바로 퇴장 (알림도 바로). 잠깐 안에 돌아오면 다시 들여보낸다.
+    // 방에 남은 사람이 없으면 방이 사라지지 않게 예전처럼 자리를 잡아 둔다
+    const othersHere = this.humans().some((u) => u.id !== user.id && !!u.conn);
+    if ((this.status === 'waiting' || seat === null) && othersHere) {
+      user.rejoin = { roomId: this.id, until: Date.now() + REJOIN_MS };
+      this.leave(user, `${user.nickname}님이 퇴장했습니다`);
+      return;
+    }
     if (seat !== null) {
       this.systemChat(`${user.nickname}님의 연결이 끊겼습니다. 돌아올 때까지 봇이 대신 칩니다`);
       this.game?.occupantChanged(seat);
-    } else if (this.spectators.has(user.id)) {
-      this.systemChat(`관전 중인 ${user.nickname}님의 연결이 끊겼습니다`);
     }
     this.changed();
   }
