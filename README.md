@@ -30,3 +30,17 @@ npm test           # 엔진 단위·시뮬레이션 테스트 + 서버 통합 �
 npm run typecheck
 ```
 
+## 봇
+
+| 종류 | 파일 | 설명 |
+|---|---|---|
+| smart (기본) | `packages/server/src/smartBot.ts` | 자기 패와 공개 정보만 본다. 나온 카드·무늬 없는 사람을 기억해 이길 확률을 어림하고, 같은 편/상대 편을 따져 점수카드를 몰아주거나 아낀다. 공약은 딸 수 있는 트릭 수를 어림해서 정한다 |
+| simple | `packages/server/src/simpleBot.ts` | 1차 단순 봇. 대결 비교용 |
+
+봇끼리 대결해서 비교·조정한다 (같은 판에 두 봇을 섞어 앉히고, 자리를 바꿔 두 번 돌린다):
+
+```bash
+cd packages/server
+npx tsx scripts/bench.ts 1000 1,2,3,4      # 판 수, 프리셋 번호
+PARAMS='{"bidMargin":-2}' npx tsx scripts/bench.ts 1000 1   # 상수를 바꿔 실험
+```
