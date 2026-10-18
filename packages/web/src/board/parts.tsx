@@ -8,7 +8,7 @@ import { CardBackView, CardView, SUIT_NAME, SUIT_SYMBOL } from '../cards.js';
 import { Dsb } from './Dsb.js';
 
 export function bidLabel(b: Bid): ReactNode {
-  if (b.type === 'pass') return <><span className="icon">⊘</span> 출마 포기</>;
+  if (b.type === 'pass') return <><span className="icon">⊘</span> 포기</>;
   if (b.type === 'dealMiss') return <><span className="icon">✕</span> 딜 미스</>;
   return <><SuitIcon suit={b.kiruda} /> {b.kiruda === NO_SUIT ? '노기루다' : SUIT_NAME[b.kiruda]} {b.goal}</>;
 }

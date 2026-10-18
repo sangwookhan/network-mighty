@@ -106,8 +106,7 @@ export function play(name: SoundName) {
       for (let i = 0; i < 3; i++) swish(a, i * 0.04, 0.08, 0.15, 1500);
       break;
     case 'turn':
-      tone(a, 880, 0, 0.18, 'sine', 0.1);
-      tone(a, 1320, 0.09, 0.22, 'sine', 0.08);
+      TURN_SOUNDS.find((c) => c.id === turnSound)!.make(a);
       break;
     case 'elected':
       [523, 659, 784, 1047].forEach((f, i) => tone(a, f, i * 0.1, 0.3, 'triangle', 0.12));
@@ -215,4 +214,40 @@ export const currentCardSound = () => cardSound;
 
 export function setCardSound(id: string) {
   if (CARD_SOUNDS.some((c) => c.id === id)) cardSound = id;
+}
+
+/** 위로 미끄러지는 음 하나 (뽁 소리) */
+function sweep(a: AudioContext, from: number, to: number, at: number, dur: number, vol: number) {
+  const o = a.createOscillator();
+  const g = a.createGain();
+  const t = a.currentTime + at;
+  o.frequency.setValueAtTime(from, t);
+  o.frequency.exponentialRampToValueAtTime(to, t + dur);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(a.destination);
+  o.start(t);
+  o.stop(t + dur + 0.02);
+}
+
+/** 내 차례 알림음 후보 (/sounds.html 에서 들어 보기). turnSound 가 지금 쓰는 것 */
+export const TURN_SOUNDS: { id: string; name: string; desc: string; make: (a: AudioContext) => void }[] = [
+  { id: 'chime2', name: 'T1. 처음 소리 (띠링)', desc: '높은 음 두 개', make: (a) => (tone(a, 880, 0, 0.18, 'sine', 0.1), tone(a, 1320, 0.09, 0.22, 'sine', 0.08)) },
+  {
+    id: 'marimba3', name: 'T2. 또로롱 (마림바)', desc: '나무 건반 세 음이 올라감',
+    make: (a) => [523, 659, 784].forEach((f, i) => (tone(a, f, i * 0.08, 0.25, 'triangle', 0.16), tone(a, f * 4, i * 0.08, 0.05, 'sine', 0.03))),
+  },
+  {
+    id: 'bell', name: 'T3. 띵 (작은 종)', desc: '맑게 울리고 천천히 사라짐',
+    make: (a) => (tone(a, 1318, 0, 0.9, 'sine', 0.12), tone(a, 2637, 0, 0.5, 'sine', 0.05), tone(a, 3951, 0, 0.25, 'sine', 0.02)),
+  },
+  { id: 'pop', name: 'T4. 뽁 (방울)', desc: '짧게 위로 튀는 소리', make: (a) => (sweep(a, 300, 900, 0, 0.12, 0.25), sweep(a, 500, 1400, 0.13, 0.1, 0.15)) },
+  { id: 'knock', name: 'T5. 똑똑 (노크)', desc: '나무 문을 두 번 두드림', make: (a) => [0, 0.14].forEach((t) => (tone(a, 720, t, 0.07, 'sine', 0.25), tone(a, 1440, t, 0.03, 'sine', 0.06))) },
+];
+
+let turnSound = 'marimba3';
+export const currentTurnSound = () => turnSound;
+
+export function setTurnSound(id: string) {
+  if (TURN_SOUNDS.some((c) => c.id === id)) turnSound = id;
 }

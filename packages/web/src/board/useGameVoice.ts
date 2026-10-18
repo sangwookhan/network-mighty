@@ -19,9 +19,9 @@ export function useGameVoice(room: RoomView, game: GameView) {
     // 각자 공약 (내 것과 딜 미스는 빼고: 딜 미스는 서버 안내로 읽는다)
     // (선거가 끝나는 마지막 공약은 당선 안내가 먼저 오므로 읽지 않는다)
     if (now.deal === p.deal && now.log > p.log && game.phase === 'election' && game.master === null)
-      for (const e of log.slice(p.log)) if (e.seat !== me && e.bid.type !== 'dealMiss') speak('bid', e.bid.type === 'pass' ? `${room.seats[e.seat]?.nickname}님 출마 포기` : `${room.seats[e.seat]?.nickname}님 ${bidText(e.bid)} 출마`);
+      for (const e of log.slice(p.log)) if (e.seat !== me && e.bid.type !== 'dealMiss') speak('bid', e.bid.type === 'pass' ? `${room.seats[e.seat]?.nickname} 포기` : `${room.seats[e.seat]?.nickname} ${bidText(e.bid)}`);
     // 트릭 가져감
-    if (now.trickDone && now.trickDone !== p.trickDone) speak('trick', game.lastTrick!.winner === me ? '내가 가져감' : `${room.seats[game.lastTrick!.winner]?.nickname}님 가져감`);
+    if (now.trickDone && now.trickDone !== p.trickDone) speak('trick', game.lastTrick!.winner === me ? '나' : `${room.seats[game.lastTrick!.winner]?.nickname}님`);
     // 판 결과: 런·빽런, 어느 편 승리, 내가 이겼으면 축하
     if (now.result && !(p.result && p.deal === now.deal)) {
       const r = game.result!;
@@ -36,9 +36,7 @@ export function useGameVoice(room: RoomView, game: GameView) {
       }
       speak('result', parts.join(' '));
     }
-    // 내 차례
-    const kind = game.myRequest?.kind;
-    if (now.req !== null && now.req !== p.req && (kind === 'play' || kind === 'bid' || kind === 'final' || kind === 'kill')) speak('turn', '내 차례입니다');
+    // 내 차례는 말 대신 알림음(useGameSounds 의 'turn')으로 알린다
   });
 
   // 남은 시간 5초: 요청을 받은 순간 남은 시간으로 한 번 맞춰 둔다 (일시정지면 남은 시간이 없어 취소)

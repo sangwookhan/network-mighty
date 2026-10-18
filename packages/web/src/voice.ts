@@ -8,12 +8,12 @@ export type VoiceKind = 'callout' | 'room' | 'bid' | 'deal' | 'contract' | 'frie
 /** 종류별 이름과 기본 크기 (배경 음악을 덮지 않게 자주 나오는 것은 작게) */
 export const VOICE_KINDS: { id: VoiceKind; name: string; hint: string; base: number }[] = [
   { id: 'callout', name: '특수 카드', hint: '마이티·조커·조커콜·간·오버간', base: 0.9 },
-  { id: 'turn', name: '내 차례', hint: '내 차례입니다 · 5초 남았습니다', base: 0.8 },
+  { id: 'turn', name: '시간 임박', hint: '내 차례에 5초 남았습니다 (내 차례는 알림음)', base: 0.8 },
   { id: 'contract', name: '당선·최종 공약', hint: '누가 무엇으로 당선, 최종 공약과 프렌드', base: 0.8 },
   { id: 'friend', name: '프렌드 공개', hint: '프렌드는 누구, 초구 프렌드', base: 0.8 },
   { id: 'result', name: '판 결과', hint: '여당/야당 승리, 런·빽런, 내가 이기면 축하', base: 0.85 },
-  { id: 'bid', name: '공약 부르기', hint: '각자 공약·포기', base: 0.6 },
-  { id: 'trick', name: '트릭 가져감', hint: '누가 가져감 (매 트릭)', base: 0.55 },
+  { id: 'bid', name: '공약 부르기', hint: '각자 공약·포기 (빠르면 최근 것만)', base: 0.6 },
+  { id: 'trick', name: '트릭 가져감', hint: '가져간 사람 이름 (매 트릭)', base: 0.55 },
   { id: 'deal', name: '판 시작·딜 미스·탈락', hint: '몇 번째 판, 딜 미스, 6마 탈락', base: 0.6 },
   { id: 'room', name: '방 소식', hint: '입장·나가기·일어나기·관전·자리·연결', base: 0.5 },
 ];
@@ -70,7 +70,7 @@ const speakable = (text: string) => text.replace(/[♠◆♥♣]/g, '').replace(
 /** 우선순위: 밀릴 때 낮은 것부터 버린다 (방 소식·결과처럼 드물고 중요한 것은 남긴다) */
 const PRIORITY: Record<VoiceKind, number> = { room: 3, result: 3, contract: 3, friend: 3, turn: 3, deal: 2, callout: 2, bid: 2, trick: 1 };
 const MAX_WAIT = 4; // 기다리는 말 수
-const STALE_MS: Record<VoiceKind, number> = { room: 15000, result: 10000, contract: 10000, friend: 10000, turn: 4000, deal: 8000, callout: 2500, bid: 7000, trick: 3000 };
+const STALE_MS: Record<VoiceKind, number> = { room: 15000, result: 10000, contract: 10000, friend: 10000, turn: 4000, deal: 8000, callout: 2500, bid: 3000, trick: 2500 };
 
 interface Item {
   kind: VoiceKind;
@@ -128,6 +128,8 @@ export function speak(kind: VoiceKind, text: string, opts: { urgent?: boolean; v
     } else next();
     return;
   }
+  // 공약·트릭처럼 빨리 지나가는 말은 줄에 쌓인 같은 종류를 버리고 가장 최근 것만 남긴다
+  if (kind === 'bid' || kind === 'trick') for (let i = queue.length - 1; i >= 0; i--) if (queue[i].kind === kind) queue.splice(i, 1);
   queue.push(item);
   while (queue.length > MAX_WAIT) {
     // 가장 낮은 우선순위 중 가장 오래된 것을 버린다
