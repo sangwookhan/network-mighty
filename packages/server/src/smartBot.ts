@@ -42,6 +42,18 @@ export const PARAMS = Object.assign(HAND_PARAMS, {
   laterPoints: 0.2,
   /** 카드를 아끼는 정도 */
   holdScale: 1.5,
+  /** 기루다를 아끼는 정도: 기본 + 세기² 배수 */
+  kirudaHoldBase: 0.6,
+  kirudaHoldScale: 1.2,
+  /** 주공 편이 기루다를 먼저 돌릴 때 더하는 값 (기루다 3장 이상 / 미만) */
+  leadKirudaBonus: 0.8,
+  leadKirudaSmall: 0.2,
+  /** 야당이 기루다로 리드할 때 빼는 값 */
+  oppLeadKirudaPenalty: 0.8,
+  /** 확실히 이기는 카드를 일찍 거둘 때 더하는 값 */
+  cashBonus: 0.6,
+  /** 조커콜 선언 가치 */
+  jokercallBonus: 1.5,
 });
 
 export function decideSmart(g: Game, seat: number, req: Request): GameAction {
@@ -252,7 +264,7 @@ function holdValueRaw(c: Card, k: Knowledge): number {
   if (c === k.mighty) return 2.2 * late;
   if (c === JOKER) return (k.g.rules.jokerLastTurnEffective || turnsLeft > 1 ? 1.9 : 0.6) * late;
   const p = powerOf(c) / 13;
-  return (isKiruda(c, k.kiruda) ? 0.6 + 1.2 * p * p : 1.0 * p * p * p) * late;
+  return (isKiruda(c, k.kiruda) ? PARAMS.kirudaHoldBase + PARAMS.kirudaHoldScale * p * p : 1.0 * p * p * p) * late;
 }
 
 function choosePlay(g: Game, seat: number, req: Extract<Request, { kind: 'play' }>): GameAction {
@@ -318,15 +330,16 @@ function choosePlay(g: Game, seat: number, req: Extract<Request, { kind: 'play' 
 
     if (leading) {
       // 확실히 이기는 카드는 일찍 거둔다
-      if (pTeam > 0.85 && card !== k.mighty && card !== JOKER) value += 0.6;
+      if (pTeam > 0.85 && card !== k.mighty && card !== JOKER) value += PARAMS.cashBonus;
       // 주공 편은 기루다를 먼저 돌려 상대 기루다를 뺀다, 야당은 기루다 리드를 피한다
-      if (isKiruda(card, k.kiruda)) value += k.iAmDefender ? (g.myHand.filter((c) => isKiruda(c, k.kiruda)).length >= 3 ? 0.8 : 0.2) : -0.8;
+      if (isKiruda(card, k.kiruda))
+        value += k.iAmDefender ? (g.myHand.filter((c) => isKiruda(c, k.kiruda)).length >= 3 ? PARAMS.leadKirudaBonus : PARAMS.leadKirudaSmall) : -PARAMS.oppLeadKirudaPenalty;
       // 조커콜: 조커가 상대 편에 있을 것 같으면 선언
       if (card === jcCard && a.jokercall) {
         const jokerOut = !k.played.has(JOKER) && !g.myHand.includes(JOKER);
         const friendIsJoker = g.friendChoice?.kind === 'card' && g.friendChoice.card === JOKER;
         const jokerEnemy = k.iAmDefender ? !friendIsJoker : friendIsJoker || true;
-        value += jokerOut && jokerEnemy ? 1.5 : -1;
+        value += jokerOut && jokerEnemy ? PARAMS.jokercallBonus : -1;
       }
     } else if (card === JOKER && jc) {
       value += 0; // 조커콜에 강제로 내는 경우

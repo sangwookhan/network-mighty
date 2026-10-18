@@ -9,6 +9,8 @@ import { PARAMS } from '../src/smartBot.js';
 
 // 조정 실험용: PARAMS='{"bidMargin":0}' npx tsx scripts/bench.ts
 if (process.env.PARAMS) Object.assign(PARAMS, JSON.parse(process.env.PARAMS));
+// 검증용: 다른 판으로 다시 재기 (SEED=1000 npx tsx scripts/bench.ts)
+const SEED = Number(process.env.SEED ?? 0);
 
 function seeded(seed: number) {
   let a = seed >>> 0;
@@ -95,8 +97,8 @@ async function main() {
     const n = presetRules(id).players;
     const a: BotKind[] = Array.from({ length: n }, (_, i) => (i % 2 === 0 ? 'smart' : 'simple'));
     const b: BotKind[] = a.map((k) => (k === 'smart' ? 'simple' : 'smart'));
-    const r1 = await runMatch(id, deals, a, id * 1000 + 1);
-    const r2 = await runMatch(id, deals, b, id * 1000 + 2);
+    const r1 = await runMatch(id, deals, a, SEED + id * 1000 + 1);
+    const r2 = await runMatch(id, deals, b, SEED + id * 1000 + 2);
     const name = PRESETS.find((p) => p.id === id)!.name;
     for (const kind of ['smart', 'simple'] as BotKind[]) {
       const s = merge(r1[kind], r2[kind]);
