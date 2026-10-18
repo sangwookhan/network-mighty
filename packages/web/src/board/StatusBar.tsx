@@ -39,7 +39,7 @@ export function StatusBar({ room, game }: { room: RoomView; game: GameView }) {
       <span className="spacer" />
       <DeckSelect />
       <SoundMenu up />
-      <span>{game.dealNo}번째 판{game.phase === 'play' ? ` · ${game.turn + 1}/10` : ''}</span>
+      <span className="deal-no">{game.dealNo}번째 판{game.phase === 'play' ? ` · ${game.turn + 1}/10` : ''}</span>
     </div>
   );
 }

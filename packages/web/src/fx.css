@@ -17,18 +17,18 @@
 @keyframes fresh-pulse { to { box-shadow: 0 0 0 2px #fff59d, 0 0 20px 6px rgba(255, 213, 79, 0.95); } }
 .fresh-note { color: #ffd54f; font-weight: bold; }
 
-.status-bar .sound-toggle { font-size: 12px; padding: 0 6px; height: 18px; line-height: 16px; cursor: pointer; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border-color: rgba(255, 255, 255, 0.25); }
+.status-bar .sound-toggle { font-size: 0.92em; padding: 0 0.5em; height: 1.6em; line-height: 1; cursor: pointer; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border-color: rgba(255, 255, 255, 0.25); }
 .status-bar .sound-toggle.off { color: #889a8f; }
 .name-tag.mine, .seat-name.mine { cursor: pointer; }
 .name-tag.mine:hover .nick, .seat-name.mine:hover { text-decoration: underline dotted; }
-.status-bar .deck-select { font-size: 12px; height: 18px; padding: 0 4px; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 4px; }
+.status-bar .deck-select { font-size: 0.92em; height: 1.6em; padding: 0 0.3em; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 4px; }
 .status-bar .deck-select option { color: #000; }
 
 /* 소리 메뉴: 효과음 / 음성 안내, 음성 종류별 켬·끔 */
 .sound-menu { position: relative; display: inline-block; }
-.menu-bar .sound-toggle { font-size: 12px; padding: 1px 10px; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border-color: rgba(255, 255, 255, 0.25); }
-.sound-pop { position: fixed; z-index: 30; width: 330px; background: #17251e; color: #e8efe9; border: 1px solid #000;
-  border-radius: 8px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; white-space: normal; text-align: left; }
+.menu-bar .sound-toggle { font-size: 0.92em; padding: 0.15em 0.75em; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border-color: rgba(255, 255, 255, 0.25); }
+.sound-pop { position: fixed; z-index: 30; width: min(25em, 94vw); background: #17251e; color: #e8efe9; border: 1px solid #000;
+  border-radius: 8px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; font-size: calc(var(--bar-fs) * 0.9); white-space: normal; text-align: left; }
 .sound-pop label { display: flex; align-items: baseline; gap: 6px; cursor: pointer; }
 .sound-pop .sp-main { font-weight: bold; font-size: 14px; }
 .sound-pop .hint { color: #9fb3a6; font-weight: normal; font-size: 11px; }

@@ -1,10 +1,10 @@
 /* 게임판: 좌석 배치(원작 배치 참고, re/04_screen_layout.md), 가운데 트릭, 내 패, 상태 표시줄, 떠 있는 창 */
 .room { height: 100vh; display: flex; flex-direction: column; }
 .room .room-body { flex: 1; overflow: auto; }
-.menu-bar { background: linear-gradient(#22352b, #17251e); color: #e8efe9; padding: 3px 8px; border-bottom: 1px solid #000; gap: 8px; font-size: 13px; }
-.menu-bar button { padding: 1px 10px; font-size: 12px; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border-color: rgba(255, 255, 255, 0.25); }
+.menu-bar { background: linear-gradient(#22352b, #17251e); color: #e8efe9; padding: 0.25em 0.6em; border-bottom: 1px solid #000; gap: 0.6em; font-size: var(--bar-fs); min-height: var(--bar-h); }
+.menu-bar button { padding: 0.15em 0.75em; font-size: 0.92em; background: rgba(255, 255, 255, 0.08); color: #e8efe9; border-color: rgba(255, 255, 255, 0.25); }
 .menu-bar button:hover { background: rgba(255, 255, 255, 0.16); }
-.menu-bar select { background: #0f1a14; color: #e8efe9; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 4px; }
+.menu-bar select { font-size: 0.92em; padding: 0.1em 0.3em; background: #0f1a14; color: #e8efe9; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 4px; }
 .room-play { position: relative; flex: 1; min-height: 0; }
 .board { position: absolute; inset: 0; overflow: hidden; color: #fff;
   /* 카드 테이블: 가운데를 비추는 조명 + 펠트 결 + 짙은 초록, 가장자리는 나무 테두리 */
@@ -29,10 +29,10 @@
 .side-top-right { top: 6px; left: 69%; transform: translateX(-50%); }
 .side-left { left: 6px; top: 40%; transform: translateY(-50%); flex-direction: row; align-items: flex-start; }
 .side-right { right: 6px; top: 40%; transform: translateY(-50%); flex-direction: row-reverse; align-items: flex-start; }
-.side-bottom { bottom: 34px; left: 50%; transform: translateX(-50%); }
+.side-bottom { bottom: calc(var(--bar-h) + 10px); left: 50%; transform: translateX(-50%); }
 /* 5마·6마: 좌우 사람은 아래쪽 */
 .players-5 .side-left, .players-5 .side-right, .players-6 .side-left, .players-6 .side-right { top: 58%; }
-.side-bottom-left { bottom: 30px; left: 3%; flex-direction: row; align-items: flex-end; }
+.side-bottom-left { bottom: calc(var(--bar-h) + 6px); left: 3%; flex-direction: row; align-items: flex-end; }
 .opponent .meta { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .side-left .meta { align-items: flex-start; }
 .side-right .meta { align-items: flex-end; }
@@ -69,7 +69,7 @@
 .election-box { position: absolute; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.6); padding: 6px 14px; font-size: 22px; white-space: nowrap; text-shadow: 1px 1px 0 #000; }
 
 /* 내 패: 고정 자리, 다시 배치할 때 미끄러지듯 이동 */
-.my-area { position: absolute; bottom: 30px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 4; pointer-events: none; }
+.my-area { position: absolute; bottom: calc(var(--bar-h) + 6px); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 4; pointer-events: none; }
 .my-area > * { pointer-events: auto; }
 .players-6 .my-area { left: 36%; right: 0; }
 .my-row { display: flex; align-items: flex-end; gap: 10px; }
@@ -85,16 +85,20 @@
 .my-discards { font-size: 12px; opacity: 0.8; }
 
 /* 원작 상태 표시줄: 기루다 | 공약 | 프렌드 | 메시지 */
-.status-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 24px; background: linear-gradient(#1d2d24, #111b16); color: #e8efe9; display: flex; align-items: center; gap: 10px; padding: 0 8px; font-size: 13px; border-top: 1px solid #000; z-index: 7; white-space: nowrap; overflow: hidden; }
+.status-bar { position: absolute; left: 0; right: 0; bottom: 0; height: var(--bar-h); background: linear-gradient(#1d2d24, #111b16); color: #e8efe9; display: flex; align-items: center; gap: 0.7em; padding: 0 0.6em; font-size: var(--bar-fs); border-top: 1px solid #000; z-index: 7; white-space: nowrap; overflow: hidden; }
 .status-bar .spacer { flex: 1; }
+/* 좁은 화면: 칸들은 줄이지 않고, 안내 문구만 줄여 '…'로. 휴대폰에서는 판 번호를 숨긴다 */
+.status-bar > * { flex-shrink: 0; }
+.status-bar .status-text, .status-bar .spacer { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.board.portrait .status-bar .deal-no { display: none; }
 .status-bar .countdown { color: #ff8a80; }
 .status-bar .spectating { color: #9fb3a6; }
-.status-bar .pane { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 18px; padding: 0 4px; border: 1px solid; border-color: rgba(0, 0, 0, 0.6) rgba(255, 255, 255, 0.15) rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.6); background: rgba(0, 0, 0, 0.3); border-radius: 3px; }
+.status-bar .pane { display: inline-flex; align-items: center; justify-content: center; min-width: 2em; height: 1.45em; padding: 0 0.3em; border: 1px solid; border-color: rgba(0, 0, 0, 0.6) rgba(255, 255, 255, 0.15) rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.6); background: rgba(0, 0, 0, 0.3); border-radius: 3px; }
 .status-bar .icon-pane .icon { background: none; width: auto; height: auto; margin: 0; }
 .status-bar .icon-pane .icon { color: #fff; }
 .status-bar .icon-pane .icon.red { color: #ff6b6b; }
 .status-bar .none { color: #ff6b6b; font-weight: bold; }
-.status-bar .friend-pane { min-width: 90px; }
+.status-bar .friend-pane { min-width: 7em; }
 .status-bar .paused-tag { color: #ffd54f; font-weight: bold; }
 
 /* 떠 있는 창: 점수, 채팅 */
@@ -106,7 +110,7 @@
 .score-window th { font-weight: normal; color: #444; padding: 2px 6px; }
 .score-window td { padding: 1px 6px; }
 .score-window tr.me td { font-weight: bold; }
-.chat-window { left: 8px; bottom: 32px; display: flex; flex-direction: column; min-width: 160px; min-height: 110px; }
+.chat-window { left: 8px; bottom: calc(var(--bar-h) + 8px); display: flex; flex-direction: column; min-width: 160px; min-height: 110px; }
 /* 6마는 왼쪽 아래에 사람이 앉으므로 채팅 창을 왼쪽 위로 */
 .room-play.players-6 .chat-window { bottom: auto; top: 8px; }
 .chat-window .chat { flex: 1; min-height: 0; height: auto; border: 0; border-radius: 0; }
@@ -143,9 +147,9 @@
 .board.portrait .side-right .meta { align-items: flex-end; }
 .board.portrait .center { top: 47%; }
 .board.portrait .election-box { font-size: 16px; }
-.board.portrait .my-area { bottom: 28px; }
+.board.portrait .my-area { bottom: calc(var(--bar-h) + 4px); }
 .board.portrait .my-row { flex-direction: column-reverse; align-items: center; gap: 4px; }
 .board.portrait .my-tag { flex-direction: row; align-items: center; }
 .board.portrait .players-6 .my-area, .board.portrait.players-6 .my-area { left: 0; }
 .board.portrait .status-bar .friend-pane { min-width: 0; }
-.board.portrait .status-bar { font-size: 12px; gap: 6px; }
+.board.portrait .status-bar { gap: 0.4em; }
